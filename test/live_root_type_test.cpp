@@ -1,11 +1,12 @@
 #include <cstdlib>
 
+#include <hugin/munin_snapshot.hpp>
 #include <munin/container.hpp>
 
 int main()
 {
     munin::container container;
-    auto const snapshot = container.to_json();
+    auto const snapshot = hugin::capture_snapshot(container);
 
     if (snapshot["type"] != "container")
     {

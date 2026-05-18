@@ -4,6 +4,15 @@ project(hugin LANGUAGES CXX)
 
 include(CTest)
 
+add_library(hugin INTERFACE)
+
+target_compile_features(hugin INTERFACE cxx_std_20)
+
+target_include_directories(hugin
+    INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+
 if (BUILD_TESTING)
     set(TERMINALPP_WITH_TESTS FALSE CACHE BOOL "" FORCE)
     add_subdirectory(

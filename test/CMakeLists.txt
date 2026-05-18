@@ -12,6 +12,7 @@ target_compile_options(hugin_test
 
 target_link_libraries(hugin_test
     PRIVATE
+        hugin
         KazDragon::munin
 )
 
