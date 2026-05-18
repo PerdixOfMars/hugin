@@ -47,4 +47,28 @@ inline auto find_focused_leaf(nlohmann::json const &snapshot)
     return &snapshot;
 }
 
+inline auto find_component_by_id(
+    nlohmann::json const &snapshot, std::string_view id)
+    -> nlohmann::json const *
+{
+    if (snapshot.value("id", "") == id)
+    {
+        return &snapshot;
+    }
+
+    auto const subcomponents = snapshot.find("subcomponents");
+    if (subcomponents != snapshot.end())
+    {
+        for (auto const &child : *subcomponents)
+        {
+            if (auto const *component = find_component_by_id(child, id))
+            {
+                return component;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
 }  // namespace hugin

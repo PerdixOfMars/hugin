@@ -11,6 +11,7 @@ auto make_focused_container_snapshot() -> nlohmann::json
 {
     munin::container container;
     auto button = munin::make_button(" OK ");
+    button->set_id("ok_button");
     container.add_component(button);
     container.set_focus();
 
@@ -41,4 +42,14 @@ TEST(live_snapshot_queries, returns_the_button_as_the_focused_leaf)
 
     ASSERT_NE(nullptr, focused_leaf);
     EXPECT_EQ("button", (*focused_leaf)["type"]);
+}
+
+TEST(live_snapshot_queries, finds_a_component_by_automation_id)
+{
+    auto const snapshot = make_focused_container_snapshot();
+
+    auto const *component = hugin::find_component_by_id(snapshot, "ok_button");
+
+    ASSERT_NE(nullptr, component);
+    EXPECT_EQ("button", (*component)["type"]);
 }
