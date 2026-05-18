@@ -1,5 +1,5 @@
 add_executable(hugin_test
-    live_root_type_test.cpp
+    live_snapshot_query_test.cpp
 )
 
 target_compile_features(hugin_test PRIVATE cxx_std_20)
@@ -17,6 +17,6 @@ target_link_libraries(hugin_test
 )
 
 add_test(
-    NAME hugin_munin_root_type.is_container
+    NAME hugin_live_snapshot_queries.capture_and_count
     COMMAND hugin_test
 )
