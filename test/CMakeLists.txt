@@ -10,6 +10,11 @@ target_compile_options(hugin_test
         $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-Wall -Wextra -Wshadow -Wpedantic -Werror>
 )
 
+target_link_libraries(hugin_test
+    PRIVATE
+        KazDragon::munin
+)
+
 add_test(
     NAME hugin_smoke.builds_and_runs
     COMMAND hugin_test
