@@ -24,4 +24,27 @@ inline auto count_components_of_type(
     return count;
 }
 
+inline auto find_focused_leaf(nlohmann::json const &snapshot)
+    -> nlohmann::json const *
+{
+    if (!snapshot.value("has_focus", false))
+    {
+        return nullptr;
+    }
+
+    auto const subcomponents = snapshot.find("subcomponents");
+    if (subcomponents != snapshot.end())
+    {
+        for (auto const &child : *subcomponents)
+        {
+            if (auto const *focused_leaf = find_focused_leaf(child))
+            {
+                return focused_leaf;
+            }
+        }
+    }
+
+    return &snapshot;
+}
+
 }  // namespace hugin

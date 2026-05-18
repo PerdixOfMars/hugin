@@ -1,4 +1,7 @@
-add_executable(hugin_test
+
+add_executable(hugin_test)
+
+target_sources(hugin_test PRIVATE
     live_snapshot_query_test.cpp
 )
 
@@ -12,11 +15,9 @@ target_compile_options(hugin_test
 
 target_link_libraries(hugin_test
     PRIVATE
+        GTest::gtest_main
         hugin
-        KazDragon::munin
 )
 
-add_test(
-    NAME hugin_live_snapshot_queries.capture_and_count
-    COMMAND hugin_test
-)
+include(GoogleTest)
+gtest_discover_tests(hugin_test)
