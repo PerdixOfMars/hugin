@@ -1,5 +1,5 @@
 add_executable(hugin_test
-    smoke_test.cpp
+    live_root_type_test.cpp
 )
 
 target_compile_features(hugin_test PRIVATE cxx_std_20)
@@ -16,6 +16,6 @@ target_link_libraries(hugin_test
 )
 
 add_test(
-    NAME hugin_smoke.builds_and_runs
+    NAME hugin_munin_root_type.is_container
     COMMAND hugin_test
 )
