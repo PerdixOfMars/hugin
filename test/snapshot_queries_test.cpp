@@ -163,3 +163,16 @@ TEST(snapshot_query_find_focused_leaf, ignores_an_unfocused_child_beneath_a_focu
     ASSERT_TRUE(focused_leaf.has_value());
     EXPECT_EQ("button", (*focused_leaf)["type"]);
 }
+
+TEST(snapshot_query_count_components_of_type, counts_both_root_and_child_matches)
+{
+    auto const snapshot = nlohmann::json{
+        {"type", "button"},
+        {"subcomponents",
+         nlohmann::json::array({nlohmann::json{
+             {"type", "button"},
+         }})},
+    };
+
+    EXPECT_EQ(2U, hugin::count_components_of_type(snapshot, "button"));
+}
