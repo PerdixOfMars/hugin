@@ -176,3 +176,19 @@ TEST(snapshot_query_count_components_of_type, counts_both_root_and_child_matches
 
     EXPECT_EQ(2U, hugin::count_components_of_type(snapshot, "button"));
 }
+
+TEST(snapshot_query_find_component_by_id, returns_the_first_matching_child_in_array_order)
+{
+    auto const snapshot = nlohmann::json{
+        {"type", "container"},
+        {"subcomponents",
+         nlohmann::json::array(
+             {nlohmann::json{{"type", "button"}, {"id", "ok_button"}},
+              nlohmann::json{{"type", "toggle"}, {"id", "ok_button"}}})},
+    };
+
+    auto const component = hugin::find_component_by_id(snapshot, "ok_button");
+
+    ASSERT_TRUE(component.has_value());
+    EXPECT_EQ("button", (*component)["type"]);
+}
