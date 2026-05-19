@@ -3,6 +3,7 @@ add_executable(hugin_test)
 
 target_sources(hugin_test PRIVATE
     live_snapshot_query_test.cpp
+    snapshot_queries_test.cpp
 )
 
 target_compile_features(hugin_test PRIVATE cxx_std_20)
