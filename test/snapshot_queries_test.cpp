@@ -127,3 +127,21 @@ TEST(snapshot_query_count_components_of_type, counts_multiple_matches_across_the
 
     EXPECT_EQ(2U, hugin::count_components_of_type(snapshot, "button"));
 }
+
+TEST(snapshot_query_find_component_by_id, prefers_the_root_when_the_root_matches)
+{
+    auto const snapshot = nlohmann::json{
+        {"type", "dialog"},
+        {"id", "ok_button"},
+        {"subcomponents",
+         nlohmann::json::array({nlohmann::json{
+             {"type", "button"},
+             {"id", "ok_button"},
+         }})},
+    };
+
+    auto const component = hugin::find_component_by_id(snapshot, "ok_button");
+
+    ASSERT_TRUE(component.has_value());
+    EXPECT_EQ("dialog", (*component)["type"]);
+}
