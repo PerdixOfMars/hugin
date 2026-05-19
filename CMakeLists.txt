@@ -29,7 +29,11 @@ target_include_directories(hugin
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-target_sources(hugin PRIVATE src/munin_snapshot.cpp)
+target_sources(hugin
+    PRIVATE
+        src/munin_snapshot.cpp
+        src/snapshot_queries.cpp
+)
 
 target_link_libraries(hugin PUBLIC KazDragon::munin)
 

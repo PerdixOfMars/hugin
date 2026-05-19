@@ -6,69 +6,45 @@
 
 namespace hugin {
 
-inline auto count_components_of_type(
-    nlohmann::json const &snapshot, std::string_view type) -> std::size_t
-{
-    auto count = std::size_t{0};
+/**
+ * Count every component in a snapshot tree whose `type` matches `type`.
+ *
+ * Use this when a test wants a structural assertion such as "this screen has
+ * two buttons" without first resolving a specific component.
+ *
+ * @param snapshot The root snapshot returned by `capture_snapshot()`.
+ * @param type The Munin component type to match, such as `"button"`.
+ * @return The number of matching components in the full snapshot tree.
+ */
+auto count_components_of_type(
+    nlohmann::json const &snapshot, std::string_view type) -> std::size_t;
 
-    if (snapshot.value("type", "") == type)
-    {
-        ++count;
-    }
+/**
+ * Find the focused leaf component in a snapshot tree.
+ *
+ * This follows Munin's outward automation view of focus. It returns the most
+ * specific focused component that remains visible in the snapshot tree.
+ *
+ * @param snapshot The root snapshot returned by `capture_snapshot()`.
+ * @return A pointer to the focused component JSON object, or `nullptr` if the
+ * snapshot tree does not currently contain focus.
+ */
+auto find_focused_leaf(nlohmann::json const &snapshot)
+    -> nlohmann::json const *;
 
-    for (auto const &child : snapshot.value("subcomponents", nlohmann::json::array()))
-    {
-        count += count_components_of_type(child, type);
-    }
-
-    return count;
-}
-
-inline auto find_focused_leaf(nlohmann::json const &snapshot)
-    -> nlohmann::json const *
-{
-    if (!snapshot.value("has_focus", false))
-    {
-        return nullptr;
-    }
-
-    auto const subcomponents = snapshot.find("subcomponents");
-    if (subcomponents != snapshot.end())
-    {
-        for (auto const &child : *subcomponents)
-        {
-            if (auto const *focused_leaf = find_focused_leaf(child))
-            {
-                return focused_leaf;
-            }
-        }
-    }
-
-    return &snapshot;
-}
-
-inline auto find_component_by_id(
+/**
+ * Find the first component in a snapshot tree whose `id` matches `id`.
+ *
+ * Use this when a test wants to target a specific authored control such as
+ * `@ok_button` after assigning that `Automation ID` in Munin.
+ *
+ * @param snapshot The root snapshot returned by `capture_snapshot()`.
+ * @param id The authored automation ID to match.
+ * @return A pointer to the matching component JSON object, or `nullptr` if no
+ * component in the snapshot tree has that ID.
+ */
+auto find_component_by_id(
     nlohmann::json const &snapshot, std::string_view id)
-    -> nlohmann::json const *
-{
-    if (snapshot.value("id", "") == id)
-    {
-        return &snapshot;
-    }
-
-    auto const subcomponents = snapshot.find("subcomponents");
-    if (subcomponents != snapshot.end())
-    {
-        for (auto const &child : *subcomponents)
-        {
-            if (auto const *component = find_component_by_id(child, id))
-            {
-                return component;
-            }
-        }
-    }
-
-    return nullptr;
-}
+    -> nlohmann::json const *;
 
 }  // namespace hugin
