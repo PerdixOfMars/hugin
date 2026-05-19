@@ -22,11 +22,11 @@ auto count_components_of_type(
 }
 
 auto find_focused_leaf(nlohmann::json const &snapshot)
-    -> nlohmann::json const *
+    -> std::optional<nlohmann::json>
 {
     if (!snapshot.value("has_focus", false))
     {
-        return nullptr;
+        return std::nullopt;
     }
 
     auto const subcomponents = snapshot.find("subcomponents");
@@ -34,23 +34,23 @@ auto find_focused_leaf(nlohmann::json const &snapshot)
     {
         for (auto const &child : *subcomponents)
         {
-            if (auto const *focused_leaf = find_focused_leaf(child))
+            if (auto focused_leaf = find_focused_leaf(child))
             {
                 return focused_leaf;
             }
         }
     }
 
-    return &snapshot;
+    return std::optional<nlohmann::json>{snapshot};
 }
 
 auto find_component_by_id(
     nlohmann::json const &snapshot, std::string_view id)
-    -> nlohmann::json const *
+    -> std::optional<nlohmann::json>
 {
     if (snapshot.value("id", "") == id)
     {
-        return &snapshot;
+        return std::optional<nlohmann::json>{snapshot};
     }
 
     auto const subcomponents = snapshot.find("subcomponents");
@@ -58,14 +58,14 @@ auto find_component_by_id(
     {
         for (auto const &child : *subcomponents)
         {
-            if (auto const *component = find_component_by_id(child, id))
+            if (auto component = find_component_by_id(child, id))
             {
                 return component;
             }
         }
     }
 
-    return nullptr;
+    return std::nullopt;
 }
 
 }  // namespace hugin

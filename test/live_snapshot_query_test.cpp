@@ -38,9 +38,9 @@ TEST(live_snapshot_queries, returns_the_button_as_the_focused_leaf)
 {
     auto const snapshot = make_focused_container_snapshot();
 
-    auto const *focused_leaf = hugin::find_focused_leaf(snapshot);
+    auto const focused_leaf = hugin::find_focused_leaf(snapshot);
 
-    ASSERT_NE(nullptr, focused_leaf);
+    ASSERT_TRUE(focused_leaf.has_value());
     EXPECT_EQ("button", (*focused_leaf)["type"]);
 }
 
@@ -48,8 +48,8 @@ TEST(live_snapshot_queries, finds_a_component_by_automation_id)
 {
     auto const snapshot = make_focused_container_snapshot();
 
-    auto const *component = hugin::find_component_by_id(snapshot, "ok_button");
+    auto const component = hugin::find_component_by_id(snapshot, "ok_button");
 
-    ASSERT_NE(nullptr, component);
+    ASSERT_TRUE(component.has_value());
     EXPECT_EQ("button", (*component)["type"]);
 }

@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <optional>
 #include <string_view>
 
 namespace hugin {
@@ -26,11 +27,11 @@ auto count_components_of_type(
  * specific focused component that remains visible in the snapshot tree.
  *
  * @param snapshot The root snapshot returned by `capture_snapshot()`.
- * @return A pointer to the focused component JSON object, or `nullptr` if the
- * snapshot tree does not currently contain focus.
+ * @return The focused component JSON object, or `std::nullopt` if the snapshot
+ * tree does not currently contain focus.
  */
 auto find_focused_leaf(nlohmann::json const &snapshot)
-    -> nlohmann::json const *;
+    -> std::optional<nlohmann::json>;
 
 /**
  * Find the first component in a snapshot tree whose `id` matches `id`.
@@ -40,11 +41,11 @@ auto find_focused_leaf(nlohmann::json const &snapshot)
  *
  * @param snapshot The root snapshot returned by `capture_snapshot()`.
  * @param id The authored automation ID to match.
- * @return A pointer to the matching component JSON object, or `nullptr` if no
+ * @return The matching component JSON object, or `std::nullopt` if no
  * component in the snapshot tree has that ID.
  */
 auto find_component_by_id(
     nlohmann::json const &snapshot, std::string_view id)
-    -> nlohmann::json const *;
+    -> std::optional<nlohmann::json>;
 
 }  // namespace hugin
