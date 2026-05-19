@@ -41,3 +41,13 @@ TEST(snapshot_query_find_focused_leaf, returns_empty_when_the_root_does_not_have
 
     EXPECT_FALSE(hugin::find_focused_leaf(snapshot).has_value());
 }
+
+TEST(snapshot_query_find_component_by_id, returns_empty_when_the_root_does_not_match)
+{
+    auto const snapshot = nlohmann::json{
+        {"type", "container"},
+        {"id", "main_screen"},
+    };
+
+    EXPECT_FALSE(hugin::find_component_by_id(snapshot, "ok_button").has_value());
+}
