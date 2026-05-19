@@ -205,3 +205,20 @@ TEST(snapshot_query_find_component_by_id, returns_empty_when_no_nested_child_mat
 
     EXPECT_FALSE(hugin::find_component_by_id(snapshot, "ok_button").has_value());
 }
+
+TEST(snapshot_query_find_focused_leaf, ignores_later_focused_siblings_once_the_first_focused_child_is_found)
+{
+    auto const snapshot = nlohmann::json{
+        {"type", "container"},
+        {"has_focus", true},
+        {"subcomponents",
+         nlohmann::json::array(
+             {nlohmann::json{{"type", "button"}, {"has_focus", true}},
+              nlohmann::json{{"type", "toggle"}, {"has_focus", true}}})},
+    };
+
+    auto const focused_leaf = hugin::find_focused_leaf(snapshot);
+
+    ASSERT_TRUE(focused_leaf.has_value());
+    EXPECT_EQ("button", (*focused_leaf)["type"]);
+}
