@@ -19,3 +19,15 @@ TEST(snapshot_query_count_components_of_type, counts_a_matching_root)
 
     EXPECT_EQ(1U, hugin::count_components_of_type(snapshot, "button"));
 }
+
+TEST(snapshot_query_count_components_of_type, counts_one_nested_match)
+{
+    auto const snapshot = nlohmann::json{
+        {"type", "container"},
+        {"subcomponents",
+         nlohmann::json::array(
+             {nlohmann::json{{"type", "button"}}})},
+    };
+
+    EXPECT_EQ(1U, hugin::count_components_of_type(snapshot, "button"));
+}
