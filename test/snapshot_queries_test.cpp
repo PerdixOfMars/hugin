@@ -192,3 +192,16 @@ TEST(snapshot_query_find_component_by_id, returns_the_first_matching_child_in_ar
     ASSERT_TRUE(component.has_value());
     EXPECT_EQ("button", (*component)["type"]);
 }
+
+TEST(snapshot_query_find_component_by_id, returns_empty_when_no_nested_child_matches)
+{
+    auto const snapshot = nlohmann::json{
+        {"type", "container"},
+        {"subcomponents",
+         nlohmann::json::array(
+             {nlohmann::json{{"type", "button"}, {"id", "cancel_button"}},
+              nlohmann::json{{"type", "toggle"}, {"id", "enable_music"}}})},
+    };
+
+    EXPECT_FALSE(hugin::find_component_by_id(snapshot, "ok_button").has_value());
+}
