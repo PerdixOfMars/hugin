@@ -77,3 +77,21 @@ TEST(snapshot_query_find_component_by_id, returns_the_matching_root)
     ASSERT_TRUE(component.has_value());
     EXPECT_EQ("button", (*component)["type"]);
 }
+
+TEST(snapshot_query_find_focused_leaf, returns_a_focused_child_instead_of_the_parent)
+{
+    auto const snapshot = nlohmann::json{
+        {"type", "container"},
+        {"has_focus", true},
+        {"subcomponents",
+         nlohmann::json::array({nlohmann::json{
+             {"type", "button"},
+             {"has_focus", true},
+         }})},
+    };
+
+    auto const focused_leaf = hugin::find_focused_leaf(snapshot);
+
+    ASSERT_TRUE(focused_leaf.has_value());
+    EXPECT_EQ("button", (*focused_leaf)["type"]);
+}
