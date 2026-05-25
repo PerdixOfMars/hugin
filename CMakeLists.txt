@@ -31,6 +31,7 @@ target_include_directories(hugin
 
 target_sources(hugin
     PRIVATE
+        src/automation_session.cpp
         src/munin_snapshot.cpp
         src/snapshot_queries.cpp
 )
