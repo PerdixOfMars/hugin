@@ -10,6 +10,8 @@ class automation_session
 public:
     explicit automation_session(munin::component &root);
 
+    [[nodiscard]] auto snapshot() const -> nlohmann::json;
+
     void press_key(terminalpp::virtual_key const &key);
 
 private:

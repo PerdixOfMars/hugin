@@ -60,3 +60,14 @@ TEST(automation_session_press_key, sends_the_key_to_the_inspected_root)
     ASSERT_TRUE(root.last_key().has_value());
     EXPECT_EQ(terminalpp::vk::enter, root.last_key()->key);
 }
+
+TEST(automation_session_snapshot, returns_the_inspected_root_snapshot)
+{
+    recording_component root;
+    root.set_id("root");
+    hugin::automation_session session{root};
+
+    auto const snapshot = session.snapshot();
+
+    EXPECT_EQ("root", snapshot["id"]);
+}
