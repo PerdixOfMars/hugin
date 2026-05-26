@@ -44,7 +44,9 @@ struct fake_channel
 
 }  // namespace
 
-TEST(hugin_dsl_session, queries_one_button_node_by_role_from_a_munin_window)
+TEST(
+    hugin_dsl_session,
+    queries_one_named_button_node_by_role_from_a_munin_window)
 {
     fake_channel channel;
     terminalpp::terminal terminal{channel};
