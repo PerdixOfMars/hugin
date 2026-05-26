@@ -57,4 +57,5 @@ TEST(hugin_dsl_session, queries_one_button_node_by_role_from_a_munin_window)
 
     ASSERT_EQ(1U, buttons.size());
     EXPECT_EQ("button", buttons.front().role());
+    EXPECT_EQ("OK", buttons.front().name());
 }

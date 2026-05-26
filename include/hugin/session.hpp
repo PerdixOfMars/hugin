@@ -22,6 +22,11 @@ public:
         return snapshot_.value("type", "");
     }
 
+    [[nodiscard]] auto name() const -> std::string
+    {
+        return snapshot_.value("name", "");
+    }
+
 private:
     nlohmann::json snapshot_;
 };
