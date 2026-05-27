@@ -68,22 +68,6 @@ struct single_button_window
 
 void add_button_under_intermediate_containers(
     std::shared_ptr<munin::container> const &content,
-    std::size_t intermediate_container_count)
-{
-    auto parent = content;
-    for (auto count = std::size_t{}; count != intermediate_container_count;
-         ++count)
-    {
-        auto child = std::make_shared<munin::container>();
-        parent->add_component(child);
-        parent = child;
-    }
-
-    parent->add_component(munin::make_button(" OK "));
-}
-
-void add_button_under_intermediate_containers(
-    std::shared_ptr<munin::container> const &content,
     std::size_t intermediate_container_count,
     std::string_view label)
 {
@@ -97,6 +81,14 @@ void add_button_under_intermediate_containers(
     }
 
     parent->add_component(munin::make_button(std::string{label}));
+}
+
+void add_button_under_intermediate_containers(
+    std::shared_ptr<munin::container> const &content,
+    std::size_t intermediate_container_count)
+{
+    add_button_under_intermediate_containers(
+        content, intermediate_container_count, " OK ");
 }
 
 void expect_missing_button_diagnostic_contains(
