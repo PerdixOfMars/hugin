@@ -137,6 +137,25 @@ TEST(hugin_dsl_session, queries_a_grandchild_button_node_by_role)
     EXPECT_EQ("button", buttons.front().role());
 }
 
+TEST(hugin_dsl_session, queries_a_great_grandchild_button_node_by_role)
+{
+    fake_channel channel;
+    terminalpp::terminal terminal{channel};
+    auto content = std::make_shared<munin::container>();
+    auto group = std::make_shared<munin::container>();
+    auto subgroup = std::make_shared<munin::container>();
+    subgroup->add_component(munin::make_button(" OK "));
+    group->add_component(subgroup);
+    content->add_component(group);
+    munin::window window{terminal, content};
+    hugin::session ui{window};
+
+    auto const buttons = ui.query(hugin::by::role("button"));
+
+    ASSERT_EQ(1U, buttons.size());
+    EXPECT_EQ("button", buttons.front().role());
+}
+
 TEST(hugin_dsl_session, clicking_button_changes_sibling_image_name)
 {
     fake_channel channel;

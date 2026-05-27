@@ -118,6 +118,12 @@ public:
                  child.value("subcomponents", nlohmann::json::array()))
             {
                 append_if_matches(matches, grandchild, selector);
+
+                for (auto const &great_grandchild :
+                     grandchild.value("subcomponents", nlohmann::json::array()))
+                {
+                    append_if_matches(matches, great_grandchild, selector);
+                }
             }
         }
 
