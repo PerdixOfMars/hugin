@@ -78,9 +78,7 @@ TEST(
     EXPECT_EQ("OK", buttons.front().name());
 }
 
-TEST(
-    hugin_dsl_session,
-    strict_find_reports_missing_button_with_a_diagnostic)
+TEST(hugin_dsl_session, strict_find_reports_missing_button_with_a_diagnostic)
 {
     single_button_window screen;
 
@@ -92,9 +90,7 @@ TEST(
     catch (hugin::diagnostic_error const &error)
     {
         auto const message = std::string{error.what()};
-        EXPECT_NE(
-            std::string::npos,
-            message.find("role_name(button, Cancel)"));
+        EXPECT_NE(std::string::npos, message.find("role_name(button, Cancel)"));
         EXPECT_NE(std::string::npos, message.find("button \"OK\""));
     }
 }
@@ -115,6 +111,23 @@ TEST(hugin_dsl_session, queries_a_nested_button_node_by_role)
     terminalpp::terminal terminal{channel};
     auto content = std::make_shared<munin::container>();
     content->add_component(munin::make_button(" OK "));
+    munin::window window{terminal, content};
+    hugin::session ui{window};
+
+    auto const buttons = ui.query(hugin::by::role("button"));
+
+    ASSERT_EQ(1U, buttons.size());
+    EXPECT_EQ("button", buttons.front().role());
+}
+
+TEST(hugin_dsl_session, queries_a_grandchild_button_node_by_role)
+{
+    fake_channel channel;
+    terminalpp::terminal terminal{channel};
+    auto content = std::make_shared<munin::container>();
+    auto group = std::make_shared<munin::container>();
+    group->add_component(munin::make_button(" OK "));
+    content->add_component(group);
     munin::window window{terminal, content};
     hugin::session ui{window};
 

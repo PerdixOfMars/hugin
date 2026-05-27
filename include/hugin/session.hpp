@@ -48,7 +48,9 @@ private:
     {
         return {
             snapshot_.at("position").at("x").get<terminalpp::coordinate_type>(),
-            snapshot_.at("position").at("y").get<terminalpp::coordinate_type>()};
+            snapshot_.at("position")
+                .at("y")
+                .get<terminalpp::coordinate_type>()};
     }
 
     nlohmann::json snapshot_;
@@ -112,6 +114,15 @@ public:
             if (child.value("type", "") == selector.role)
             {
                 matches.push_back(make_node(child));
+            }
+
+            for (auto const &grandchild :
+                 child.value("subcomponents", nlohmann::json::array()))
+            {
+                if (grandchild.value("type", "") == selector.role)
+                {
+                    matches.push_back(make_node(grandchild));
+                }
             }
         }
 
@@ -177,9 +188,7 @@ private:
     {
         return node{
             std::move(snapshot),
-            [this](terminalpp::point const &position) {
-                click_at(position);
-            }};
+            [this](terminalpp::point const &position) { click_at(position); }};
     }
 
     void click_at(terminalpp::point const &position) const
