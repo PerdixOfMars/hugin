@@ -6,6 +6,7 @@
 #include <terminalpp/terminal.hpp>
 
 #include <functional>
+#include <string>
 
 namespace {
 
@@ -59,4 +60,29 @@ TEST(
     ASSERT_EQ(1U, buttons.size());
     EXPECT_EQ("button", buttons.front().role());
     EXPECT_EQ("OK", buttons.front().name());
+}
+
+TEST(
+    hugin_dsl_session,
+    strict_find_reports_missing_button_with_a_diagnostic)
+{
+    fake_channel channel;
+    terminalpp::terminal terminal{channel};
+    auto content = munin::make_button(" OK ");
+    munin::window window{terminal, content};
+    hugin::session ui{window};
+
+    try
+    {
+        (void)ui.find(hugin::by::role_name("button", "Cancel"));
+        FAIL() << "Expected strict find to throw for a missing button";
+    }
+    catch (hugin::diagnostic_error const &error)
+    {
+        auto const message = std::string{error.what()};
+        EXPECT_NE(
+            std::string::npos,
+            message.find("role_name(button, Cancel)"));
+        EXPECT_NE(std::string::npos, message.find("button \"OK\""));
+    }
 }

@@ -3,6 +3,7 @@
 #include <munin/window.hpp>
 #include <nlohmann/json.hpp>
 
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -36,11 +37,32 @@ struct role_selector
     std::string role;
 };
 
+struct role_name_selector
+{
+    std::string role;
+    std::string name;
+};
+
+class diagnostic_error : public std::runtime_error
+{
+public:
+    explicit diagnostic_error(std::string message)
+      : std::runtime_error(std::move(message))
+    {
+    }
+};
+
 namespace by {
 
 inline auto role(std::string_view role) -> role_selector
 {
     return role_selector{std::string{role}};
+}
+
+inline auto role_name(std::string_view role, std::string_view name)
+    -> role_name_selector
+{
+    return role_name_selector{std::string{role}, std::string{name}};
 }
 
 }  // namespace by
@@ -55,6 +77,15 @@ public:
     [[nodiscard]] auto query(role_selector const &) const -> std::vector<node>
     {
         return {node{window_.to_json().at("content")}};
+    }
+
+    [[nodiscard]] auto find(role_name_selector const &selector) const -> node
+    {
+        auto const visible = node{window_.to_json().at("content")};
+        throw diagnostic_error{
+            "role_name(" + selector.role + ", " + selector.name
+            + ") not found; visible nodes: " + visible.role() + " \""
+            + visible.name() + "\""};
     }
 
 private:
