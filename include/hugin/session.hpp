@@ -109,20 +109,15 @@ public:
         }
 
         auto matches = std::vector<node>{};
+
         for (auto const &child : content.at("subcomponents"))
         {
-            if (child.value("type", "") == selector.role)
-            {
-                matches.push_back(make_node(child));
-            }
+            append_if_matches(matches, child, selector);
 
             for (auto const &grandchild :
                  child.value("subcomponents", nlohmann::json::array()))
             {
-                if (grandchild.value("type", "") == selector.role)
-                {
-                    matches.push_back(make_node(grandchild));
-                }
+                append_if_matches(matches, grandchild, selector);
             }
         }
 
@@ -167,6 +162,17 @@ private:
     [[nodiscard]] auto content_snapshot() const -> nlohmann::json
     {
         return window_.to_json().at("content");
+    }
+
+    void append_if_matches(
+        std::vector<node> &matches,
+        nlohmann::json const &snapshot,
+        role_selector const &selector) const
+    {
+        if (snapshot.value("type", "") == selector.role)
+        {
+            matches.push_back(make_node(snapshot));
+        }
     }
 
     [[nodiscard]] auto query(role_name_selector const &selector) const
