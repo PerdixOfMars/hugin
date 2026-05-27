@@ -138,7 +138,10 @@ public:
                 matches.front().name())};
         }
 
-        auto const visible = content_node();
+        auto const visible_with_role = query(role_selector{selector.role});
+        auto const visible = visible_with_role.empty()
+                               ? content_node()
+                               : visible_with_role.front();
         throw diagnostic_error{std::format(
             "role_name({}, {}) not found; visible nodes: {} \"{}\"",
             selector.role,
