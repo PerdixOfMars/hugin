@@ -5,6 +5,7 @@
 #include <terminalpp/mouse.hpp>
 #include <terminalpp/point.hpp>
 
+#include <format>
 #include <functional>
 #include <stdexcept>
 #include <string>
@@ -128,19 +129,22 @@ public:
 
         if (matches.size() > 1U)
         {
-            throw diagnostic_error{
-                "role_name(" + selector.role + ", " + selector.name
-                + ") expected one, found "
-                + std::to_string(matches.size())
-                + "; matches: " + matches.front().role() + " \""
-                + matches.front().name() + "\""};
+            throw diagnostic_error{std::format(
+                "role_name({}, {}) expected one, found {}; matches: {} \"{}\"",
+                selector.role,
+                selector.name,
+                matches.size(),
+                matches.front().role(),
+                matches.front().name())};
         }
 
         auto const visible = content_node();
-        throw diagnostic_error{
-            "role_name(" + selector.role + ", " + selector.name
-            + ") not found; visible nodes: " + visible.role() + " \""
-            + visible.name() + "\""};
+        throw diagnostic_error{std::format(
+            "role_name({}, {}) not found; visible nodes: {} \"{}\"",
+            selector.role,
+            selector.name,
+            visible.role(),
+            visible.name())};
     }
 
 private:
