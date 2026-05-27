@@ -119,15 +119,7 @@ public:
 
     [[nodiscard]] auto find(role_name_selector const &selector) const -> node
     {
-        auto const nodes = query(role_selector{selector.role});
-        auto matches = std::vector<node>{};
-        for (auto const &visible : nodes)
-        {
-            if (visible.name() == selector.name)
-            {
-                matches.push_back(visible);
-            }
-        }
+        auto const matches = query(selector);
 
         if (matches.size() == 1U)
         {
@@ -160,6 +152,21 @@ private:
     [[nodiscard]] auto content_snapshot() const -> nlohmann::json
     {
         return window_.to_json().at("content");
+    }
+
+    [[nodiscard]] auto query(role_name_selector const &selector) const
+        -> std::vector<node>
+    {
+        auto matches = std::vector<node>{};
+        for (auto const &visible : query(role_selector{selector.role}))
+        {
+            if (visible.name() == selector.name)
+            {
+                matches.push_back(visible);
+            }
+        }
+
+        return matches;
     }
 
     [[nodiscard]] auto make_node(nlohmann::json snapshot) const -> node
