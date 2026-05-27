@@ -139,27 +139,18 @@ public:
                 matches.front().name())};
         }
 
-        auto const visible_with_role = query(role_selector{selector.role});
-        auto const visible = visible_with_role.empty()
-                               ? content_node()
-                               : visible_with_role.front();
+        auto const visible_nodes = visible_nodes_for_missing(selector);
         auto message = std::format(
             "role_name({}, {}) not found; visible nodes: {}",
             selector.role,
             selector.name,
-            node_summary(visible));
+            node_summary(visible_nodes.front()));
 
-        for (auto remaining_visible = visible_with_role.begin() + 1;
-             remaining_visible != visible_with_role.end();
+        for (auto remaining_visible = visible_nodes.begin() + 1;
+             remaining_visible != visible_nodes.end();
              ++remaining_visible)
         {
             append_node_summary(message, *remaining_visible);
-        }
-
-        auto const visible_images = query(role_selector{"image"});
-        if (!visible_images.empty())
-        {
-            append_node_summary(message, visible_images.front());
         }
 
         throw diagnostic_error{std::move(message)};
@@ -174,6 +165,24 @@ private:
     [[nodiscard]] auto content_snapshot() const -> nlohmann::json
     {
         return window_.to_json().at("content");
+    }
+
+    [[nodiscard]] auto visible_nodes_for_missing(
+        role_name_selector const &selector) const -> std::vector<node>
+    {
+        auto visible_nodes = query(role_selector{selector.role});
+        if (visible_nodes.empty())
+        {
+            visible_nodes.push_back(content_node());
+        }
+
+        auto const visible_images = query(role_selector{"image"});
+        if (!visible_images.empty())
+        {
+            visible_nodes.push_back(visible_images.front());
+        }
+
+        return visible_nodes;
     }
 
     static void append_node_summary(std::string &message, node const &visible)
