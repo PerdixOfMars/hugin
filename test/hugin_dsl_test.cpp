@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <hugin/session.hpp>
 #include <munin/button.hpp>
+#include <munin/container.hpp>
 #include <munin/window.hpp>
 #include <terminalpp/core.hpp>
 #include <terminalpp/terminal.hpp>
@@ -104,4 +105,19 @@ TEST(hugin_dsl_session, strict_find_returns_a_button_matching_role_and_name)
 
     EXPECT_EQ("button", button.role());
     EXPECT_EQ("OK", button.name());
+}
+
+TEST(hugin_dsl_session, queries_a_nested_button_node_by_role)
+{
+    fake_channel channel;
+    terminalpp::terminal terminal{channel};
+    auto content = std::make_shared<munin::container>();
+    content->add_component(munin::make_button(" OK "));
+    munin::window window{terminal, content};
+    hugin::session ui{window};
+
+    auto const buttons = ui.query(hugin::by::role("button"));
+
+    ASSERT_EQ(1U, buttons.size());
+    EXPECT_EQ("button", buttons.front().role());
 }

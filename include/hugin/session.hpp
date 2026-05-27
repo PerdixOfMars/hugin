@@ -74,9 +74,16 @@ public:
     {
     }
 
-    [[nodiscard]] auto query(role_selector const &) const -> std::vector<node>
+    [[nodiscard]] auto query(role_selector const &selector) const
+        -> std::vector<node>
     {
-        return {content_node()};
+        auto const content = content_snapshot();
+        if (content.value("type", "") == selector.role)
+        {
+            return {node{content}};
+        }
+
+        return {node{content.at("subcomponents").at(0)}};
     }
 
     [[nodiscard]] auto find(role_name_selector const &selector) const -> node
@@ -96,7 +103,12 @@ public:
 private:
     [[nodiscard]] auto content_node() const -> node
     {
-        return node{window_.to_json().at("content")};
+        return node{content_snapshot()};
+    }
+
+    [[nodiscard]] auto content_snapshot() const -> nlohmann::json
+    {
+        return window_.to_json().at("content");
     }
 
     munin::window &window_;
