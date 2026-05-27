@@ -151,10 +151,14 @@ private:
         return node{
             std::move(snapshot),
             [this](terminalpp::point const &position) {
-                window_.event(terminalpp::mouse::event{
-                    terminalpp::mouse::event_type::left_button_down,
-                    position});
+                click_at(position);
             }};
+    }
+
+    void click_at(terminalpp::point const &position) const
+    {
+        window_.event(terminalpp::mouse::event{
+            terminalpp::mouse::event_type::left_button_down, position});
     }
 
     munin::window &window_;
