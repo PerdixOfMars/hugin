@@ -2,7 +2,10 @@
 
 #include <munin/window.hpp>
 #include <nlohmann/json.hpp>
+#include <terminalpp/mouse.hpp>
+#include <terminalpp/point.hpp>
 
+#include <functional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -14,7 +17,10 @@ namespace hugin {
 class node
 {
 public:
-    explicit node(nlohmann::json snapshot) : snapshot_(std::move(snapshot))
+    using click_function = std::function<void(terminalpp::point const &)>;
+
+    explicit node(nlohmann::json snapshot, click_function click = {})
+      : snapshot_(std::move(snapshot)), click_(std::move(click))
     {
     }
 
@@ -28,8 +34,24 @@ public:
         return snapshot_.value("name", "");
     }
 
+    void click() const
+    {
+        if (click_)
+        {
+            click_(click_position());
+        }
+    }
+
 private:
+    [[nodiscard]] auto click_position() const -> terminalpp::point
+    {
+        return {
+            snapshot_.at("position").at("x").get<terminalpp::coordinate_type>(),
+            snapshot_.at("position").at("y").get<terminalpp::coordinate_type>()};
+    }
+
     nlohmann::json snapshot_;
+    click_function click_;
 };
 
 struct role_selector
@@ -80,20 +102,33 @@ public:
         auto const content = content_snapshot();
         if (content.value("type", "") == selector.role)
         {
-            return {node{content}};
+            return {make_node(content)};
         }
 
-        return {node{content.at("subcomponents").at(0)}};
+        auto matches = std::vector<node>{};
+        for (auto const &child : content.at("subcomponents"))
+        {
+            if (child.value("type", "") == selector.role)
+            {
+                matches.push_back(make_node(child));
+            }
+        }
+
+        return matches;
     }
 
     [[nodiscard]] auto find(role_name_selector const &selector) const -> node
     {
-        auto const visible = content_node();
-        if (visible.role() == selector.role && visible.name() == selector.name)
+        auto const nodes = query(role_selector{selector.role});
+        for (auto const &visible : nodes)
         {
-            return visible;
+            if (visible.name() == selector.name)
+            {
+                return visible;
+            }
         }
 
+        auto const visible = content_node();
         throw diagnostic_error{
             "role_name(" + selector.role + ", " + selector.name
             + ") not found; visible nodes: " + visible.role() + " \""
@@ -103,12 +138,23 @@ public:
 private:
     [[nodiscard]] auto content_node() const -> node
     {
-        return node{content_snapshot()};
+        return make_node(content_snapshot());
     }
 
     [[nodiscard]] auto content_snapshot() const -> nlohmann::json
     {
         return window_.to_json().at("content");
+    }
+
+    [[nodiscard]] auto make_node(nlohmann::json snapshot) const -> node
+    {
+        return node{
+            std::move(snapshot),
+            [this](terminalpp::point const &position) {
+                window_.event(terminalpp::mouse::event{
+                    terminalpp::mouse::event_type::left_button_down,
+                    position});
+            }};
     }
 
     munin::window &window_;

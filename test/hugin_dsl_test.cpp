@@ -2,6 +2,8 @@
 #include <hugin/session.hpp>
 #include <munin/button.hpp>
 #include <munin/container.hpp>
+#include <munin/image.hpp>
+#include <munin/vertical_strip_layout.hpp>
 #include <munin/window.hpp>
 #include <terminalpp/core.hpp>
 #include <terminalpp/terminal.hpp>
@@ -120,4 +122,25 @@ TEST(hugin_dsl_session, queries_a_nested_button_node_by_role)
 
     ASSERT_EQ(1U, buttons.size());
     EXPECT_EQ("button", buttons.front().role());
+}
+
+TEST(hugin_dsl_session, clicking_button_changes_sibling_image_name)
+{
+    fake_channel channel;
+    terminalpp::terminal terminal{channel};
+    auto content = std::make_shared<munin::container>();
+    content->set_layout(munin::make_vertical_strip_layout());
+    auto status = munin::make_image("Before");
+    auto button = munin::make_button(" OK ");
+    button->on_click.connect([status] { status->set_content("After"); });
+    content->add_component(status);
+    content->add_component(button);
+    content->set_size({20, 3});
+    munin::window window{terminal, content};
+    hugin::session ui{window};
+
+    ui.find(hugin::by::role_name("button", "OK")).click();
+
+    auto const image = ui.find(hugin::by::role_name("image", "After"));
+    EXPECT_EQ("After", image.name());
 }

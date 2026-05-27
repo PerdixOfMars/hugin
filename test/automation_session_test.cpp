@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <munin/basic_component.hpp>
 #include <munin/render_surface.hpp>
+#include <terminalpp/mouse.hpp>
 #include <terminalpp/virtual_key.hpp>
 
 #include <any>
@@ -17,6 +18,12 @@ public:
         -> std::optional<terminalpp::virtual_key>
     {
         return last_key_;
+    }
+
+    [[nodiscard]] auto last_mouse() const
+        -> std::optional<terminalpp::mouse::event>
+    {
+        return last_mouse_;
     }
 
 private:
@@ -38,9 +45,16 @@ private:
         {
             last_key_ = *key;
         }
+        else if (
+            auto const *mouse =
+                std::any_cast<terminalpp::mouse::event>(&event))
+        {
+            last_mouse_ = *mouse;
+        }
     }
 
     std::optional<terminalpp::virtual_key> last_key_;
+    std::optional<terminalpp::mouse::event> last_mouse_;
 };
 
 }  // namespace
@@ -70,4 +84,18 @@ TEST(automation_session_snapshot, returns_the_inspected_root_snapshot)
     auto const snapshot = session.snapshot();
 
     EXPECT_EQ("root", snapshot["id"]);
+}
+
+TEST(automation_session_click, sends_left_button_down_to_the_inspected_root)
+{
+    recording_component root;
+    hugin::automation_session session{root};
+
+    session.click({2, 3});
+
+    ASSERT_TRUE(root.last_mouse().has_value());
+    EXPECT_EQ(
+        terminalpp::mouse::event_type::left_button_down,
+        root.last_mouse()->action_);
+    EXPECT_EQ(terminalpp::point(2, 3), root.last_mouse()->position_);
 }
