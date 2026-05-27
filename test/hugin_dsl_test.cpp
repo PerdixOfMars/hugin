@@ -11,6 +11,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <cstddef>
 
 namespace {
 
@@ -63,6 +64,22 @@ struct single_button_window
     hugin::session ui;
 };
 
+void add_button_under_intermediate_containers(
+    std::shared_ptr<munin::container> const &content,
+    std::size_t intermediate_container_count)
+{
+    auto parent = content;
+    for (auto count = std::size_t{}; count != intermediate_container_count;
+         ++count)
+    {
+        auto child = std::make_shared<munin::container>();
+        parent->add_component(child);
+        parent = child;
+    }
+
+    parent->add_component(munin::make_button(" OK "));
+}
+
 }  // namespace
 
 TEST(
@@ -110,7 +127,7 @@ TEST(hugin_dsl_session, queries_a_nested_button_node_by_role)
     fake_channel channel;
     terminalpp::terminal terminal{channel};
     auto content = std::make_shared<munin::container>();
-    content->add_component(munin::make_button(" OK "));
+    add_button_under_intermediate_containers(content, 0U);
     munin::window window{terminal, content};
     hugin::session ui{window};
 
@@ -125,9 +142,7 @@ TEST(hugin_dsl_session, queries_a_grandchild_button_node_by_role)
     fake_channel channel;
     terminalpp::terminal terminal{channel};
     auto content = std::make_shared<munin::container>();
-    auto group = std::make_shared<munin::container>();
-    group->add_component(munin::make_button(" OK "));
-    content->add_component(group);
+    add_button_under_intermediate_containers(content, 1U);
     munin::window window{terminal, content};
     hugin::session ui{window};
 
@@ -142,11 +157,7 @@ TEST(hugin_dsl_session, queries_a_great_grandchild_button_node_by_role)
     fake_channel channel;
     terminalpp::terminal terminal{channel};
     auto content = std::make_shared<munin::container>();
-    auto group = std::make_shared<munin::container>();
-    auto subgroup = std::make_shared<munin::container>();
-    subgroup->add_component(munin::make_button(" OK "));
-    group->add_component(subgroup);
-    content->add_component(group);
+    add_button_under_intermediate_containers(content, 2U);
     munin::window window{terminal, content};
     hugin::session ui{window};
 
