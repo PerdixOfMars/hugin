@@ -82,6 +82,11 @@ public:
     [[nodiscard]] auto find(role_name_selector const &selector) const -> node
     {
         auto const visible = content_node();
+        if (visible.role() == selector.role && visible.name() == selector.name)
+        {
+            return visible;
+        }
+
         throw diagnostic_error{
             "role_name(" + selector.role + ", " + selector.name
             + ") not found; visible nodes: " + visible.role() + " \""

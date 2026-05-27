@@ -95,3 +95,13 @@ TEST(
         EXPECT_NE(std::string::npos, message.find("button \"OK\""));
     }
 }
+
+TEST(hugin_dsl_session, strict_find_returns_a_button_matching_role_and_name)
+{
+    single_button_window screen;
+
+    auto const button = screen.ui.find(hugin::by::role_name("button", "OK"));
+
+    EXPECT_EQ("button", button.role());
+    EXPECT_EQ("OK", button.name());
+}
