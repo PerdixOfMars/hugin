@@ -110,7 +110,8 @@ public:
 
         auto matches = std::vector<node>{};
 
-        for (auto const &child : content.at("subcomponents"))
+        for (auto const &child :
+             content.value("subcomponents", nlohmann::json::array()))
         {
             append_descendant_matches(matches, child, selector);
         }
@@ -142,12 +143,23 @@ public:
         auto const visible = visible_with_role.empty()
                                ? content_node()
                                : visible_with_role.front();
-        throw diagnostic_error{std::format(
+        auto message = std::format(
             "role_name({}, {}) not found; visible nodes: {} \"{}\"",
             selector.role,
             selector.name,
             visible.role(),
-            visible.name())};
+            visible.name());
+
+        auto const visible_images = query(role_selector{"image"});
+        if (!visible_images.empty())
+        {
+            message += std::format(
+                ", {} \"{}\"",
+                visible_images.front().role(),
+                visible_images.front().name());
+        }
+
+        throw diagnostic_error{std::move(message)};
     }
 
 private:

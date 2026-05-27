@@ -9,6 +9,7 @@
 #include <terminalpp/terminal.hpp>
 
 #include <functional>
+#include <initializer_list>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -82,7 +83,8 @@ void add_button_under_intermediate_containers(
 }
 
 void expect_missing_button_diagnostic_contains(
-    hugin::session &ui, std::string_view visible_node_summary)
+    hugin::session &ui,
+    std::initializer_list<std::string_view> visible_node_summaries)
 {
     try
     {
@@ -93,8 +95,17 @@ void expect_missing_button_diagnostic_contains(
     {
         auto const message = std::string{error.what()};
         EXPECT_NE(std::string::npos, message.find("role_name(button, Cancel)"));
-        EXPECT_NE(std::string::npos, message.find(visible_node_summary));
+        for (auto const visible_node_summary : visible_node_summaries)
+        {
+            EXPECT_NE(std::string::npos, message.find(visible_node_summary));
+        }
     }
+}
+
+void expect_missing_button_diagnostic_contains(
+    hugin::session &ui, std::string_view visible_node_summary)
+{
+    expect_missing_button_diagnostic_contains(ui, {visible_node_summary});
 }
 
 }  // namespace
@@ -131,6 +142,22 @@ TEST(
     hugin::session ui{window};
 
     expect_missing_button_diagnostic_contains(ui, "button \"OK\"");
+}
+
+TEST(
+    hugin_dsl_session,
+    strict_find_reports_a_sibling_image_in_missing_diagnostics)
+{
+    fake_channel channel;
+    terminalpp::terminal terminal{channel};
+    auto content = std::make_shared<munin::container>();
+    content->add_component(munin::make_button(" OK "));
+    content->add_component(munin::make_image("Ready"));
+    munin::window window{terminal, content};
+    hugin::session ui{window};
+
+    expect_missing_button_diagnostic_contains(
+        ui, {"button \"OK\"", "image \"Ready\""});
 }
 
 TEST(hugin_dsl_session, strict_find_returns_a_button_matching_role_and_name)
