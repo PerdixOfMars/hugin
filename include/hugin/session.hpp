@@ -144,19 +144,15 @@ public:
                                ? content_node()
                                : visible_with_role.front();
         auto message = std::format(
-            "role_name({}, {}) not found; visible nodes: {} \"{}\"",
+            "role_name({}, {}) not found; visible nodes: {}",
             selector.role,
             selector.name,
-            visible.role(),
-            visible.name());
+            node_summary(visible));
 
         auto const visible_images = query(role_selector{"image"});
         if (!visible_images.empty())
         {
-            message += std::format(
-                ", {} \"{}\"",
-                visible_images.front().role(),
-                visible_images.front().name());
+            append_node_summary(message, visible_images.front());
         }
 
         throw diagnostic_error{std::move(message)};
@@ -171,6 +167,16 @@ private:
     [[nodiscard]] auto content_snapshot() const -> nlohmann::json
     {
         return window_.to_json().at("content");
+    }
+
+    static void append_node_summary(std::string &message, node const &visible)
+    {
+        message += std::format(", {}", node_summary(visible));
+    }
+
+    [[nodiscard]] static auto node_summary(node const &visible) -> std::string
+    {
+        return std::format("{} \"{}\"", visible.role(), visible.name());
     }
 
     void append_if_matches(
