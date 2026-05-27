@@ -11,6 +11,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <cstddef>
 
 namespace {
@@ -80,6 +81,22 @@ void add_button_under_intermediate_containers(
     parent->add_component(munin::make_button(" OK "));
 }
 
+void expect_missing_button_diagnostic_contains(
+    hugin::session &ui, std::string_view visible_node_summary)
+{
+    try
+    {
+        (void)ui.find(hugin::by::role_name("button", "Cancel"));
+        FAIL() << "Expected strict find to throw for a missing button";
+    }
+    catch (hugin::diagnostic_error const &error)
+    {
+        auto const message = std::string{error.what()};
+        EXPECT_NE(std::string::npos, message.find("role_name(button, Cancel)"));
+        EXPECT_NE(std::string::npos, message.find(visible_node_summary));
+    }
+}
+
 }  // namespace
 
 TEST(
@@ -99,17 +116,7 @@ TEST(hugin_dsl_session, strict_find_reports_missing_button_with_a_diagnostic)
 {
     single_button_window screen;
 
-    try
-    {
-        (void)screen.ui.find(hugin::by::role_name("button", "Cancel"));
-        FAIL() << "Expected strict find to throw for a missing button";
-    }
-    catch (hugin::diagnostic_error const &error)
-    {
-        auto const message = std::string{error.what()};
-        EXPECT_NE(std::string::npos, message.find("role_name(button, Cancel)"));
-        EXPECT_NE(std::string::npos, message.find("button \"OK\""));
-    }
+    expect_missing_button_diagnostic_contains(screen.ui, "button \"OK\"");
 }
 
 TEST(
@@ -123,17 +130,7 @@ TEST(
     munin::window window{terminal, content};
     hugin::session ui{window};
 
-    try
-    {
-        (void)ui.find(hugin::by::role_name("button", "Cancel"));
-        FAIL() << "Expected strict find to throw for a missing button";
-    }
-    catch (hugin::diagnostic_error const &error)
-    {
-        auto const message = std::string{error.what()};
-        EXPECT_NE(std::string::npos, message.find("role_name(button, Cancel)"));
-        EXPECT_NE(std::string::npos, message.find("button \"OK\""));
-    }
+    expect_missing_button_diagnostic_contains(ui, "button \"OK\"");
 }
 
 TEST(hugin_dsl_session, strict_find_returns_a_button_matching_role_and_name)
