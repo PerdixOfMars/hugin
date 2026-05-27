@@ -112,19 +112,7 @@ public:
 
         for (auto const &child : content.at("subcomponents"))
         {
-            append_if_matches(matches, child, selector);
-
-            for (auto const &grandchild :
-                 child.value("subcomponents", nlohmann::json::array()))
-            {
-                append_if_matches(matches, grandchild, selector);
-
-                for (auto const &great_grandchild :
-                     grandchild.value("subcomponents", nlohmann::json::array()))
-                {
-                    append_if_matches(matches, great_grandchild, selector);
-                }
-            }
+            append_descendant_matches(matches, child, selector);
         }
 
         return matches;
@@ -178,6 +166,20 @@ private:
         if (snapshot.value("type", "") == selector.role)
         {
             matches.push_back(make_node(snapshot));
+        }
+    }
+
+    void append_descendant_matches(
+        std::vector<node> &matches,
+        nlohmann::json const &snapshot,
+        role_selector const &selector) const
+    {
+        append_if_matches(matches, snapshot, selector);
+
+        for (auto const &child :
+             snapshot.value("subcomponents", nlohmann::json::array()))
+        {
+            append_descendant_matches(matches, child, selector);
         }
     }
 
