@@ -149,6 +149,13 @@ public:
             selector.name,
             node_summary(visible));
 
+        for (auto remaining_visible = visible_with_role.begin() + 1;
+             remaining_visible != visible_with_role.end();
+             ++remaining_visible)
+        {
+            append_node_summary(message, *remaining_visible);
+        }
+
         auto const visible_images = query(role_selector{"image"});
         if (!visible_images.empty())
         {

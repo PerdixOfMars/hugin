@@ -82,6 +82,23 @@ void add_button_under_intermediate_containers(
     parent->add_component(munin::make_button(" OK "));
 }
 
+void add_button_under_intermediate_containers(
+    std::shared_ptr<munin::container> const &content,
+    std::size_t intermediate_container_count,
+    std::string_view label)
+{
+    auto parent = content;
+    for (auto count = std::size_t{}; count != intermediate_container_count;
+         ++count)
+    {
+        auto child = std::make_shared<munin::container>();
+        parent->add_component(child);
+        parent = child;
+    }
+
+    parent->add_component(munin::make_button(std::string{label}));
+}
+
 void expect_missing_button_diagnostic_contains(
     hugin::session &ui,
     std::initializer_list<std::string_view> visible_node_summaries)
@@ -158,6 +175,20 @@ TEST(
 
     expect_missing_button_diagnostic_contains(
         ui, {"button \"OK\"", "image \"Ready\""});
+}
+
+TEST(hugin_dsl_session, strict_find_reports_two_buttons_in_missing_diagnostics)
+{
+    fake_channel channel;
+    terminalpp::terminal terminal{channel};
+    auto content = std::make_shared<munin::container>();
+    add_button_under_intermediate_containers(content, 0U, " OK ");
+    add_button_under_intermediate_containers(content, 1U, " Save ");
+    munin::window window{terminal, content};
+    hugin::session ui{window};
+
+    expect_missing_button_diagnostic_contains(
+        ui, {"button \"OK\"", "button \"Save\""});
 }
 
 TEST(hugin_dsl_session, strict_find_returns_a_button_matching_role_and_name)
