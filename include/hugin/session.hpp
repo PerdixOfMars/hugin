@@ -76,12 +76,12 @@ public:
 
     [[nodiscard]] auto query(role_selector const &) const -> std::vector<node>
     {
-        return {node{window_.to_json().at("content")}};
+        return {content_node()};
     }
 
     [[nodiscard]] auto find(role_name_selector const &selector) const -> node
     {
-        auto const visible = node{window_.to_json().at("content")};
+        auto const visible = content_node();
         throw diagnostic_error{
             "role_name(" + selector.role + ", " + selector.name
             + ") not found; visible nodes: " + visible.role() + " \""
@@ -89,6 +89,11 @@ public:
     }
 
 private:
+    [[nodiscard]] auto content_node() const -> node
+    {
+        return node{window_.to_json().at("content")};
+    }
+
     munin::window &window_;
 };
 
