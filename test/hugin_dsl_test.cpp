@@ -1,6 +1,5 @@
-#include <hugin/session.hpp>
-
 #include <gtest/gtest.h>
+#include <hugin/session.hpp>
 #include <munin/button.hpp>
 #include <munin/window.hpp>
 #include <terminalpp/core.hpp>
