@@ -6,6 +6,7 @@
 #include <terminalpp/terminal.hpp>
 
 #include <functional>
+#include <memory>
 #include <string>
 
 namespace {
@@ -42,20 +43,32 @@ struct fake_channel
     bool alive{true};
 };
 
+struct single_button_window
+{
+    single_button_window()
+      : terminal(channel),
+        content(munin::make_button(" OK ")),
+        window(terminal, content),
+        ui(window)
+    {
+    }
+
+    fake_channel channel;
+    terminalpp::terminal terminal;
+    std::shared_ptr<munin::button> content;
+    munin::window window;
+    hugin::session ui;
+};
+
 }  // namespace
 
 TEST(
     hugin_dsl_session,
     queries_one_named_button_node_by_role_from_a_munin_window)
 {
-    fake_channel channel;
-    terminalpp::terminal terminal{channel};
-    auto content = munin::make_button(" OK ");
-    munin::window window{terminal, content};
+    single_button_window screen;
 
-    hugin::session ui{window};
-
-    auto const buttons = ui.query(hugin::by::role("button"));
+    auto const buttons = screen.ui.query(hugin::by::role("button"));
 
     ASSERT_EQ(1U, buttons.size());
     EXPECT_EQ("button", buttons.front().role());
@@ -66,15 +79,11 @@ TEST(
     hugin_dsl_session,
     strict_find_reports_missing_button_with_a_diagnostic)
 {
-    fake_channel channel;
-    terminalpp::terminal terminal{channel};
-    auto content = munin::make_button(" OK ");
-    munin::window window{terminal, content};
-    hugin::session ui{window};
+    single_button_window screen;
 
     try
     {
-        (void)ui.find(hugin::by::role_name("button", "Cancel"));
+        (void)screen.ui.find(hugin::by::role_name("button", "Cancel"));
         FAIL() << "Expected strict find to throw for a missing button";
     }
     catch (hugin::diagnostic_error const &error)
