@@ -144,3 +144,26 @@ TEST(hugin_dsl_session, clicking_button_changes_sibling_image_name)
     auto const image = ui.find(hugin::by::role_name("image", "After"));
     EXPECT_EQ("After", image.name());
 }
+
+TEST(hugin_dsl_session, strict_find_reports_ambiguous_button_with_a_diagnostic)
+{
+    fake_channel channel;
+    terminalpp::terminal terminal{channel};
+    auto content = std::make_shared<munin::container>();
+    content->add_component(munin::make_button(" OK "));
+    content->add_component(munin::make_button(" OK "));
+    munin::window window{terminal, content};
+    hugin::session ui{window};
+
+    try
+    {
+        (void)ui.find(hugin::by::role_name("button", "OK"));
+        FAIL() << "Expected strict find to throw for ambiguous buttons";
+    }
+    catch (hugin::diagnostic_error const &error)
+    {
+        auto const message = std::string{error.what()};
+        EXPECT_NE(std::string::npos, message.find("expected one, found 2"));
+        EXPECT_NE(std::string::npos, message.find("button \"OK\""));
+    }
+}

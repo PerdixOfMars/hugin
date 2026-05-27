@@ -120,12 +120,28 @@ public:
     [[nodiscard]] auto find(role_name_selector const &selector) const -> node
     {
         auto const nodes = query(role_selector{selector.role});
+        auto matches = std::vector<node>{};
         for (auto const &visible : nodes)
         {
             if (visible.name() == selector.name)
             {
-                return visible;
+                matches.push_back(visible);
             }
+        }
+
+        if (matches.size() == 1U)
+        {
+            return matches.front();
+        }
+
+        if (matches.size() > 1U)
+        {
+            throw diagnostic_error{
+                "role_name(" + selector.role + ", " + selector.name
+                + ") expected one, found "
+                + std::to_string(matches.size())
+                + "; matches: " + matches.front().role() + " \""
+                + matches.front().name() + "\""};
         }
 
         auto const visible = content_node();
