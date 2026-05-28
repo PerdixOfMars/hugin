@@ -242,6 +242,22 @@ TEST_F(hugin_dsl_session, strict_find_returns_a_child_button_matching_automation
     EXPECT_EQ("button", found.role());
 }
 
+TEST_F(
+    hugin_dsl_session,
+    strict_find_returns_a_grandchild_button_matching_automation_id)
+{
+    auto content = std::make_shared<munin::container>();
+    auto child = std::make_shared<munin::container>();
+    child->add_component(
+        munin::make_button(" OK ") | munin::with_id("ok_button"));
+    content->add_component(child);
+    auto screen = screen_with(content);
+
+    auto const found = screen.ui.find(hugin::by::id("ok_button"));
+
+    EXPECT_EQ("button", found.role());
+}
+
 TEST_F(hugin_dsl_session, queries_a_nested_button_node_by_role)
 {
     auto content = std::make_shared<munin::container>();

@@ -168,19 +168,10 @@ public:
 
     [[nodiscard]] auto find(id_selector const &selector) const -> node
     {
-        auto const content = content_snapshot();
-        if (content.value("id", "") == selector.id)
+        auto const matches = query(selector);
+        if (!matches.empty())
         {
-            return make_node(content);
-        }
-
-        for (auto const &child :
-             content.value("subcomponents", nlohmann::json::array()))
-        {
-            if (child.value("id", "") == selector.id)
-            {
-                return make_node(child);
-            }
+            return matches.front();
         }
 
         throw diagnostic_error{std::format(
@@ -266,6 +257,39 @@ private:
         }
 
         return matches;
+    }
+
+    [[nodiscard]] auto query(id_selector const &selector) const
+        -> std::vector<node>
+    {
+        auto matches = std::vector<node>{};
+        append_descendant_matches(matches, content_snapshot(), selector);
+        return matches;
+    }
+
+    void append_if_matches(
+        std::vector<node> &matches,
+        nlohmann::json const &snapshot,
+        id_selector const &selector) const
+    {
+        if (snapshot.value("id", "") == selector.id)
+        {
+            matches.push_back(make_node(snapshot));
+        }
+    }
+
+    void append_descendant_matches(
+        std::vector<node> &matches,
+        nlohmann::json const &snapshot,
+        id_selector const &selector) const
+    {
+        append_if_matches(matches, snapshot, selector);
+
+        for (auto const &child :
+             snapshot.value("subcomponents", nlohmann::json::array()))
+        {
+            append_descendant_matches(matches, child, selector);
+        }
     }
 
     [[nodiscard]] auto make_node(nlohmann::json snapshot) const -> node
