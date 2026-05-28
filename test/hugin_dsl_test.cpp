@@ -205,9 +205,8 @@ TEST_F(hugin_dsl_session, strict_find_returns_a_button_matching_role_and_name)
 
 TEST_F(hugin_dsl_session, strict_find_returns_a_button_matching_automation_id)
 {
-    auto button = munin::make_button(" OK ");
-    button->set_id("ok_button");
-    auto screen = screen_with(button);
+    auto screen = screen_with(
+        munin::make_button(" OK ") | munin::with_id("ok_button"));
 
     auto const found = screen.ui.find(hugin::by::id("ok_button"));
 
@@ -234,9 +233,8 @@ TEST_F(hugin_dsl_session, strict_find_reports_missing_automation_id_with_visible
 TEST_F(hugin_dsl_session, strict_find_returns_a_child_button_matching_automation_id)
 {
     auto content = std::make_shared<munin::container>();
-    auto button = munin::make_button(" OK ");
-    button->set_id("ok_button");
-    content->add_component(button);
+    content->add_component(
+        munin::make_button(" OK ") | munin::with_id("ok_button"));
     auto screen = screen_with(content);
 
     auto const found = screen.ui.find(hugin::by::id("ok_button"));
