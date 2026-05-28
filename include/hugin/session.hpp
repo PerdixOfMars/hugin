@@ -174,6 +174,16 @@ public:
         auto const matches = query(selector);
         if (!matches.empty())
         {
+            if (matches.size() > 1U)
+            {
+                throw diagnostic_error{std::format(
+                    "id({}) expected one, found {}; matches: {} \"{}\"",
+                    selector.id,
+                    matches.size(),
+                    matches.front().role(),
+                    matches.front().name())};
+            }
+
             return matches.front();
         }
 

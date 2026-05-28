@@ -262,6 +262,30 @@ TEST_F(
     EXPECT_EQ("button", found.role());
 }
 
+TEST_F(
+    hugin_dsl_session,
+    strict_find_reports_ambiguous_automation_id_with_a_diagnostic)
+{
+    auto content = std::make_shared<munin::container>();
+    content->add_component(
+        munin::make_button(" OK ") | munin::with_id("action_button"));
+    content->add_component(
+        munin::make_button(" Save ") | munin::with_id("action_button"));
+    auto screen = screen_with(content);
+
+    try
+    {
+        (void)screen.ui.find(hugin::by::id("action_button"));
+        FAIL() << "Expected strict find to throw for ambiguous Automation IDs";
+    }
+    catch (hugin::diagnostic_error const &error)
+    {
+        auto const message = std::string{error.what()};
+        EXPECT_NE(std::string::npos, message.find("expected one, found 2"));
+        EXPECT_NE(std::string::npos, message.find("button \"OK\""));
+    }
+}
+
 TEST_F(hugin_dsl_session, queries_a_nested_button_node_by_role)
 {
     auto content = std::make_shared<munin::container>();
