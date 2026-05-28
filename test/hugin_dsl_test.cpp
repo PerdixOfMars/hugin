@@ -203,6 +203,17 @@ TEST_F(hugin_dsl_session, strict_find_returns_a_button_matching_role_and_name)
     EXPECT_EQ("OK", button.name());
 }
 
+TEST_F(hugin_dsl_session, strict_find_returns_a_button_matching_automation_id)
+{
+    auto button = munin::make_button(" OK ");
+    button->set_id("ok_button");
+    auto screen = screen_with(button);
+
+    auto const found = screen.ui.find(hugin::by::id("ok_button"));
+
+    EXPECT_EQ("button", found.role());
+}
+
 TEST_F(hugin_dsl_session, queries_a_nested_button_node_by_role)
 {
     auto content = std::make_shared<munin::container>();

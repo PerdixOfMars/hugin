@@ -68,6 +68,11 @@ struct role_name_selector
     std::string name;
 };
 
+struct id_selector
+{
+    std::string id;
+};
+
 class diagnostic_error : public std::runtime_error
 {
 public:
@@ -88,6 +93,11 @@ inline auto role_name(std::string_view role, std::string_view name)
     -> role_name_selector
 {
     return role_name_selector{std::string{role}, std::string{name}};
+}
+
+inline auto id(std::string_view id) -> id_selector
+{
+    return id_selector{std::string{id}};
 }
 
 }  // namespace by
@@ -154,6 +164,18 @@ public:
         }
 
         throw diagnostic_error{std::move(message)};
+    }
+
+    [[nodiscard]] auto find(id_selector const &selector) const -> node
+    {
+        auto const content = content_snapshot();
+        if (content.value("id", "") == selector.id)
+        {
+            return make_node(content);
+        }
+
+        throw diagnostic_error{
+            std::format("id({}) not found", selector.id)};
     }
 
 private:
