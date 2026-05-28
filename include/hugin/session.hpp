@@ -123,7 +123,10 @@ public:
         for (auto const &child :
              content.value("subcomponents", nlohmann::json::array()))
         {
-            append_descendant_matches(matches, child, selector);
+            append_matching_descendants(
+                matches, child, [&selector](nlohmann::json const &snapshot) {
+                    return snapshot.value("type", "") == selector.role;
+                });
         }
 
         return matches;
@@ -219,28 +222,21 @@ private:
         return std::format("{} \"{}\"", visible.role(), visible.name());
     }
 
-    void append_if_matches(
+    template <typename Predicate>
+    void append_matching_descendants(
         std::vector<node> &matches,
         nlohmann::json const &snapshot,
-        role_selector const &selector) const
+        Predicate const &matches_snapshot) const
     {
-        if (snapshot.value("type", "") == selector.role)
+        if (matches_snapshot(snapshot))
         {
             matches.push_back(make_node(snapshot));
         }
-    }
-
-    void append_descendant_matches(
-        std::vector<node> &matches,
-        nlohmann::json const &snapshot,
-        role_selector const &selector) const
-    {
-        append_if_matches(matches, snapshot, selector);
 
         for (auto const &child :
              snapshot.value("subcomponents", nlohmann::json::array()))
         {
-            append_descendant_matches(matches, child, selector);
+            append_matching_descendants(matches, child, matches_snapshot);
         }
     }
 
@@ -263,33 +259,13 @@ private:
         -> std::vector<node>
     {
         auto matches = std::vector<node>{};
-        append_descendant_matches(matches, content_snapshot(), selector);
+        append_matching_descendants(
+            matches,
+            content_snapshot(),
+            [&selector](nlohmann::json const &snapshot) {
+                return snapshot.value("id", "") == selector.id;
+            });
         return matches;
-    }
-
-    void append_if_matches(
-        std::vector<node> &matches,
-        nlohmann::json const &snapshot,
-        id_selector const &selector) const
-    {
-        if (snapshot.value("id", "") == selector.id)
-        {
-            matches.push_back(make_node(snapshot));
-        }
-    }
-
-    void append_descendant_matches(
-        std::vector<node> &matches,
-        nlohmann::json const &snapshot,
-        id_selector const &selector) const
-    {
-        append_if_matches(matches, snapshot, selector);
-
-        for (auto const &child :
-             snapshot.value("subcomponents", nlohmann::json::array()))
-        {
-            append_descendant_matches(matches, child, selector);
-        }
     }
 
     [[nodiscard]] auto make_node(nlohmann::json snapshot) const -> node
