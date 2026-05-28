@@ -174,6 +174,15 @@ public:
             return make_node(content);
         }
 
+        for (auto const &child :
+             content.value("subcomponents", nlohmann::json::array()))
+        {
+            if (child.value("id", "") == selector.id)
+            {
+                return make_node(child);
+            }
+        }
+
         throw diagnostic_error{std::format(
             "id({}) not found; visible nodes: {}",
             selector.id,
