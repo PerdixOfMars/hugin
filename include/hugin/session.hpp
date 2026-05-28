@@ -174,8 +174,10 @@ public:
             return make_node(content);
         }
 
-        throw diagnostic_error{
-            std::format("id({}) not found", selector.id)};
+        throw diagnostic_error{std::format(
+            "id({}) not found; visible nodes: {}",
+            selector.id,
+            node_summary(content_node()))};
     }
 
 private:

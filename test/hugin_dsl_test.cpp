@@ -214,6 +214,23 @@ TEST_F(hugin_dsl_session, strict_find_returns_a_button_matching_automation_id)
     EXPECT_EQ("button", found.role());
 }
 
+TEST_F(hugin_dsl_session, strict_find_reports_missing_automation_id_with_visible_nodes)
+{
+    auto screen = screen_with_single_button();
+
+    try
+    {
+        (void)screen.ui.find(hugin::by::id("cancel_button"));
+        FAIL() << "Expected strict find to throw for a missing Automation ID";
+    }
+    catch (hugin::diagnostic_error const &error)
+    {
+        auto const message = std::string{error.what()};
+        EXPECT_NE(std::string::npos, message.find("id(cancel_button)"));
+        EXPECT_NE(std::string::npos, message.find("button \"OK\""));
+    }
+}
+
 TEST_F(hugin_dsl_session, queries_a_nested_button_node_by_role)
 {
     auto content = std::make_shared<munin::container>();
