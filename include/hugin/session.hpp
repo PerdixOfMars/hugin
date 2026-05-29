@@ -212,16 +212,12 @@ private:
     [[nodiscard]] auto visible_nodes_for_missing(
         role_name_selector const &selector) const -> std::vector<node>
     {
-        auto visible_nodes = query(selector.role_only());
+        auto visible_nodes = diagnostic_nodes_matching(selector.role_only());
+        append_other_diagnostic_nodes(visible_nodes, selector.role_only());
+
         if (visible_nodes.empty())
         {
             visible_nodes.push_back(content_node());
-        }
-
-        auto const visible_images = query(role_selector{"image"});
-        if (!visible_images.empty())
-        {
-            visible_nodes.push_back(visible_images.front());
         }
 
         return visible_nodes;
@@ -230,7 +226,13 @@ private:
     [[nodiscard]] auto visible_nodes_for_missing(id_selector const &) const
         -> std::vector<node>
     {
-        return {content_node()};
+        auto visible_nodes = diagnostic_nodes();
+        if (visible_nodes.empty())
+        {
+            visible_nodes.push_back(content_node());
+        }
+
+        return visible_nodes;
     }
 
     static void append_node_summary(std::string &message, node const &visible)
@@ -241,6 +243,84 @@ private:
     [[nodiscard]] static auto node_summary(node const &visible) -> std::string
     {
         return std::format("{} \"{}\"", visible.role(), visible.name());
+    }
+
+    [[nodiscard]] auto diagnostic_nodes() const -> std::vector<node>
+    {
+        auto nodes = std::vector<node>{};
+        append_diagnostic_nodes(nodes, content_snapshot());
+        return nodes;
+    }
+
+    [[nodiscard]] auto diagnostic_nodes_matching(
+        role_selector const &selector) const -> std::vector<node>
+    {
+        auto nodes = std::vector<node>{};
+        append_diagnostic_nodes_matching(nodes, content_snapshot(), selector);
+        return nodes;
+    }
+
+    void append_other_diagnostic_nodes(
+        std::vector<node> &nodes, role_selector const &selector) const
+    {
+        append_diagnostic_nodes_not_matching(
+            nodes, content_snapshot(), selector);
+    }
+
+    void append_diagnostic_nodes(
+        std::vector<node> &nodes, nlohmann::json const &snapshot) const
+    {
+        if (has_diagnostic_summary(snapshot))
+        {
+            nodes.push_back(make_node(snapshot));
+        }
+
+        for (auto const &child :
+             snapshot.value("subcomponents", nlohmann::json::array()))
+        {
+            append_diagnostic_nodes(nodes, child);
+        }
+    }
+
+    void append_diagnostic_nodes_matching(
+        std::vector<node> &nodes,
+        nlohmann::json const &snapshot,
+        role_selector const &selector) const
+    {
+        if (has_diagnostic_summary(snapshot) && selector.matches(snapshot))
+        {
+            nodes.push_back(make_node(snapshot));
+        }
+
+        for (auto const &child :
+             snapshot.value("subcomponents", nlohmann::json::array()))
+        {
+            append_diagnostic_nodes_matching(nodes, child, selector);
+        }
+    }
+
+    void append_diagnostic_nodes_not_matching(
+        std::vector<node> &nodes,
+        nlohmann::json const &snapshot,
+        role_selector const &selector) const
+    {
+        if (has_diagnostic_summary(snapshot) && !selector.matches(snapshot))
+        {
+            nodes.push_back(make_node(snapshot));
+        }
+
+        for (auto const &child :
+             snapshot.value("subcomponents", nlohmann::json::array()))
+        {
+            append_diagnostic_nodes_not_matching(nodes, child, selector);
+        }
+    }
+
+    [[nodiscard]] static auto has_diagnostic_summary(
+        nlohmann::json const &snapshot) -> bool
+    {
+        return !snapshot.value("type", "").empty()
+            && !snapshot.value("name", "").empty();
     }
 
     template <typename Predicate>
