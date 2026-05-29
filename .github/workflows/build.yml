@@ -1,0 +1,243 @@
+name: build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - build_type: Debug
+          - build_type: Release
+
+    env:
+      EXTERNAL_ROOT: ${{ github.workspace }}/.ext
+      BUILD_TYPE: ${{ matrix.build_type }}
+      TERMINALPP_REF: master
+      TERMINALPP_VERSION: "4.0.0"
+      MUNIN_REF: master
+      MUNIN_VERSION: "0.7.1"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup vcpkg (with binary caching)
+        uses: lukka/run-vcpkg@v11
+        with:
+          runVcpkgInstall: true
+          vcpkgJsonGlob: "${{ github.workspace }}/vcpkg.json"
+          vcpkgDirectory: "${{ github.workspace }}/.vcpkg"
+          vcpkgGitCommitId: "58950f88544e4637524dbd6a01d0317cf4cb77fc"
+
+      - name: Install terminalpp dependency
+        shell: bash
+        run: |
+          mkdir -p "$EXTERNAL_ROOT"
+          cd "${{ runner.workspace }}"
+          wget "https://codeload.github.com/KazDragon/terminalpp/tar.gz/refs/heads/${TERMINALPP_REF}" -O terminalpp.tar.gz
+          tar -xzf terminalpp.tar.gz
+          cmake -S "terminalpp-${TERMINALPP_REF}" -B terminalpp-build \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_INSTALL_PREFIX="$EXTERNAL_ROOT" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DTERMINALPP_WITH_TESTS=False \
+            -DTERMINALPP_VERSION="$TERMINALPP_VERSION"
+          cmake --build terminalpp-build --config "$BUILD_TYPE"
+          cmake --install terminalpp-build --config "$BUILD_TYPE"
+
+      - name: Install munin dependency
+        shell: bash
+        run: |
+          cd "${{ runner.workspace }}"
+          wget "https://codeload.github.com/KazDragon/munin/tar.gz/refs/heads/${MUNIN_REF}" -O munin.tar.gz
+          tar -xzf munin.tar.gz
+          cmake -S "munin-${MUNIN_REF}" -B munin-build \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_INSTALL_PREFIX="$EXTERNAL_ROOT" \
+            -DCMAKE_PREFIX_PATH="$EXTERNAL_ROOT" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DMUNIN_WITH_TESTS=False \
+            -DMUNIN_VERSION="$MUNIN_VERSION"
+          cmake --build munin-build --config "$BUILD_TYPE"
+          cmake --install munin-build --config "$BUILD_TYPE"
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{runner.workspace}}/hugin/build
+
+      - name: Configure CMake
+        shell: bash
+        working-directory: ${{runner.workspace}}/hugin/build
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_PREFIX_PATH=$EXTERNAL_ROOT
+
+      - name: Build
+        shell: bash
+        working-directory: ${{runner.workspace}}/hugin/build
+        run: cmake --build . --config $BUILD_TYPE
+
+      - name: Test
+        working-directory: ${{runner.workspace}}/hugin/build
+        shell: bash
+        run: ctest -C $BUILD_TYPE || (cat Testing/Temporary/LastTest.log && false)
+
+  build-coverage:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - build_type: Debug
+
+    env:
+      EXTERNAL_ROOT: ${{ github.workspace }}/.ext
+      BUILD_TYPE: ${{ matrix.build_type }}
+      TERMINALPP_REF: master
+      TERMINALPP_VERSION: "4.0.0"
+      MUNIN_REF: master
+      MUNIN_VERSION: "0.7.1"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup vcpkg (with binary caching)
+        uses: lukka/run-vcpkg@v11
+        with:
+          runVcpkgInstall: true
+          vcpkgJsonGlob: "${{ github.workspace }}/vcpkg.json"
+          vcpkgDirectory: "${{ github.workspace }}/.vcpkg"
+          vcpkgGitCommitId: "58950f88544e4637524dbd6a01d0317cf4cb77fc"
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_REF#refs/heads/}" >> "$GITHUB_OUTPUT"
+        id: extract_branch
+
+      - name: Cache lcov
+        uses: actions/cache@v4
+        with:
+          path: ~/.lcov
+          key: lcov-cache-${{ steps.extract_branch.outputs.branch }}
+          restore-keys: |
+            lcov-cache-master
+
+      - name: Install LCOV
+        shell: bash
+        run: |
+          if [ ! -f "$HOME/.lcov/usr/local/bin/lcov" ]; then
+            mkdir $HOME/.lcov-build || true;
+            cd $HOME/.lcov-build;
+            wget https://github.com/linux-test-project/lcov/releases/download/v1.16/lcov-1.16.tar.gz
+            tar -xzf lcov-1.16.tar.gz;
+            mkdir -p $HOME/.lcov || true;
+            DESTDIR=$HOME/.lcov make -C lcov-1.16/ install;
+          fi
+          echo "bin=$HOME/.lcov/usr/local/bin/lcov" >> "$GITHUB_OUTPUT"
+        id: lcov
+
+      - name: Install terminalpp dependency
+        shell: bash
+        run: |
+          mkdir -p "$EXTERNAL_ROOT"
+          cd "${{ runner.workspace }}"
+          wget "https://codeload.github.com/KazDragon/terminalpp/tar.gz/refs/heads/${TERMINALPP_REF}" -O terminalpp.tar.gz
+          tar -xzf terminalpp.tar.gz
+          cmake -S "terminalpp-${TERMINALPP_REF}" -B terminalpp-build \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_INSTALL_PREFIX="$EXTERNAL_ROOT" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DTERMINALPP_WITH_TESTS=False \
+            -DTERMINALPP_VERSION="$TERMINALPP_VERSION"
+          cmake --build terminalpp-build --config "$BUILD_TYPE"
+          cmake --install terminalpp-build --config "$BUILD_TYPE"
+
+      - name: Install munin dependency
+        shell: bash
+        run: |
+          cd "${{ runner.workspace }}"
+          wget "https://codeload.github.com/KazDragon/munin/tar.gz/refs/heads/${MUNIN_REF}" -O munin.tar.gz
+          tar -xzf munin.tar.gz
+          cmake -S "munin-${MUNIN_REF}" -B munin-build \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_INSTALL_PREFIX="$EXTERNAL_ROOT" \
+            -DCMAKE_PREFIX_PATH="$EXTERNAL_ROOT" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DMUNIN_WITH_TESTS=False \
+            -DMUNIN_VERSION="$MUNIN_VERSION"
+          cmake --build munin-build --config "$BUILD_TYPE"
+          cmake --install munin-build --config "$BUILD_TYPE"
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{runner.workspace}}/hugin/build
+
+      - name: Configure CMake
+        shell: bash
+        working-directory: ${{runner.workspace}}/hugin/build
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=$EXTERNAL_ROOT -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DHUGIN_COVERAGE=True
+
+      - name: Build
+        shell: bash
+        working-directory: ${{runner.workspace}}/hugin/build
+        run: cmake --build . --config $BUILD_TYPE
+
+      - name: Zero test counters
+        shell: bash
+        run: ${{ steps.lcov.outputs.bin }} --gcov-tool=gcov-13 --base-directory ${{runner.workspace}}/hugin/build --directory ${{runner.workspace}}/hugin/build --zerocounters -q
+
+      - name: Test
+        working-directory: ${{runner.workspace}}/hugin/build
+        shell: bash
+        run: ctest -C $BUILD_TYPE || (cat Testing/Temporary/LastTest.log && false)
+
+      - name: Calculate coverage
+        shell: bash
+        run: |
+          ${{ steps.lcov.outputs.bin }} --gcov-tool=gcov-13 --base-directory ${{runner.workspace}}/hugin/build --directory ${{runner.workspace}}/hugin/build --capture --output-file coverage.info;
+          ${{ steps.lcov.outputs.bin }} --gcov-tool=gcov-13 --remove coverage.info '*/test/*' '/usr/*' '*/3party/*' '*/.vcpkg/*' '*/vcpkg_installed/*' '*/.ext/*' --output-file coverage.info;
+          ${{ steps.lcov.outputs.bin }} --gcov-tool=gcov-13 --list coverage.info;
+
+      - name: Post coverage to Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          path-to-lcov: coverage.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-docs:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Doxygen
+        shell: bash
+        run: sudo apt install doxygen
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{runner.workspace}}/hugin/build
+
+      - name: Configure CMake
+        shell: bash
+        working-directory: ${{runner.workspace}}/hugin/build
+        run: cmake $GITHUB_WORKSPACE -DHUGIN_DOC_ONLY=True
+
+      - name: Build
+        working-directory: ${{runner.workspace}}/hugin/build
+        shell: bash
+        run: cmake --build . --target hugin_doc
+
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ${{runner.workspace}}/hugin/build/html
