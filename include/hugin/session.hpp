@@ -76,8 +76,8 @@ struct id_selector
 class diagnostic_error : public std::runtime_error
 {
 public:
-    explicit diagnostic_error(std::string message)
-      : std::runtime_error(std::move(message))
+    explicit diagnostic_error(std::string const &message)
+      : std::runtime_error(message)
     {
     }
 };
@@ -287,8 +287,9 @@ private:
 
     void click_at(terminalpp::point const &position) const
     {
-        window_.event(terminalpp::mouse::event{
-            terminalpp::mouse::event_type::left_button_down, position});
+        window_.event(
+            terminalpp::mouse::event{
+                terminalpp::mouse::event_type::left_button_down, position});
     }
 
     munin::window &window_;

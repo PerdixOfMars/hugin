@@ -15,6 +15,7 @@ Checks: >
   -misc-non-private-member-variables-in-classes,
   -modernize-avoid-c-arrays,
   -modernize-use-trailing-return-type,
+  -modernize-use-designated-initializers,
   -readability-convert-member-functions-to-static,
   -readability-else-after-return,
   -readability-identifier-length,
