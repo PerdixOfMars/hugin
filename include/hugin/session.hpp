@@ -5,6 +5,7 @@
 #include <terminalpp/mouse.hpp>
 #include <terminalpp/point.hpp>
 
+#include <concepts>
 #include <format>
 #include <functional>
 #include <stdexcept>
@@ -72,9 +73,10 @@ struct role_name_selector
     std::string role;
     std::string name;
 
-    [[nodiscard]] auto matches(node const &visible) const -> bool
+    [[nodiscard]] auto matches(nlohmann::json const &snapshot) const -> bool
     {
-        return visible.name() == name;
+        return snapshot.value("type", "") == role
+            && snapshot.value("name", "") == name;
     }
 
     [[nodiscard]] auto role_only() const -> role_selector
@@ -102,6 +104,18 @@ struct id_selector
         return std::format("id({})", id);
     }
 };
+
+template <typename Selector>
+concept snapshot_selector =
+    requires(Selector const &selector, nlohmann::json const &snapshot) {
+        { selector.matches(snapshot) } -> std::same_as<bool>;
+    };
+
+template <typename Selector>
+concept strict_find_selector =
+    snapshot_selector<Selector> && requires(Selector const &selector) {
+        { selector.describe() } -> std::convertible_to<std::string>;
+    };
 
 class diagnostic_error : public std::runtime_error
 {
@@ -139,27 +153,17 @@ public:
     {
     }
 
-    [[nodiscard]] auto query(role_selector const &selector) const
+    template <snapshot_selector Selector>
+    [[nodiscard]] auto query(Selector const &selector) const
         -> std::vector<node>
     {
-        auto const content = content_snapshot();
-        if (selector.matches(content))
-        {
-            return {make_node(content)};
-        }
-
         auto matches = std::vector<node>{};
-
-        for (auto const &child :
-             content.value("subcomponents", nlohmann::json::array()))
-        {
-            append_matching_descendants(matches, child, selector);
-        }
-
+        append_matching_descendants(matches, content_snapshot(), selector);
         return matches;
     }
 
-    [[nodiscard]] auto find(role_name_selector const &selector) const -> node
+    template <strict_find_selector Selector>
+    [[nodiscard]] auto find(Selector const &selector) const -> node
     {
         auto const matches = query(selector);
 
@@ -194,30 +198,6 @@ public:
         throw diagnostic_error{std::move(message)};
     }
 
-    [[nodiscard]] auto find(id_selector const &selector) const -> node
-    {
-        auto const matches = query(selector);
-        if (!matches.empty())
-        {
-            if (matches.size() > 1U)
-            {
-                throw diagnostic_error{std::format(
-                    "{} expected one, found {}; matches: {} \"{}\"",
-                    selector.describe(),
-                    matches.size(),
-                    matches.front().role(),
-                    matches.front().name())};
-            }
-
-            return matches.front();
-        }
-
-        throw diagnostic_error{std::format(
-            "{} not found; visible nodes: {}",
-            selector.describe(),
-            node_summary(content_node()))};
-    }
-
 private:
     [[nodiscard]] auto content_node() const -> node
     {
@@ -247,6 +227,12 @@ private:
         return visible_nodes;
     }
 
+    [[nodiscard]] auto visible_nodes_for_missing(id_selector const &) const
+        -> std::vector<node>
+    {
+        return {content_node()};
+    }
+
     static void append_node_summary(std::string &message, node const &visible)
     {
         message += std::format(", {}", node_summary(visible));
@@ -273,29 +259,6 @@ private:
         {
             append_matching_descendants(matches, child, selector);
         }
-    }
-
-    [[nodiscard]] auto query(role_name_selector const &selector) const
-        -> std::vector<node>
-    {
-        auto matches = std::vector<node>{};
-        for (auto const &visible : query(selector.role_only()))
-        {
-            if (selector.matches(visible))
-            {
-                matches.push_back(visible);
-            }
-        }
-
-        return matches;
-    }
-
-    [[nodiscard]] auto query(id_selector const &selector) const
-        -> std::vector<node>
-    {
-        auto matches = std::vector<node>{};
-        append_matching_descendants(matches, content_snapshot(), selector);
-        return matches;
     }
 
     [[nodiscard]] auto make_node(nlohmann::json snapshot) const -> node
