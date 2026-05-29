@@ -60,17 +60,47 @@ private:
 struct role_selector
 {
     std::string role;
+
+    [[nodiscard]] auto matches(nlohmann::json const &snapshot) const -> bool
+    {
+        return snapshot.value("type", "") == role;
+    }
 };
 
 struct role_name_selector
 {
     std::string role;
     std::string name;
+
+    [[nodiscard]] auto matches(node const &visible) const -> bool
+    {
+        return visible.name() == name;
+    }
+
+    [[nodiscard]] auto role_only() const -> role_selector
+    {
+        return role_selector{role};
+    }
+
+    [[nodiscard]] auto describe() const -> std::string
+    {
+        return std::format("role_name({}, {})", role, name);
+    }
 };
 
 struct id_selector
 {
     std::string id;
+
+    [[nodiscard]] auto matches(nlohmann::json const &snapshot) const -> bool
+    {
+        return snapshot.value("id", "") == id;
+    }
+
+    [[nodiscard]] auto describe() const -> std::string
+    {
+        return std::format("id({})", id);
+    }
 };
 
 class diagnostic_error : public std::runtime_error
@@ -113,7 +143,7 @@ public:
         -> std::vector<node>
     {
         auto const content = content_snapshot();
-        if (content.value("type", "") == selector.role)
+        if (selector.matches(content))
         {
             return {make_node(content)};
         }
@@ -123,10 +153,7 @@ public:
         for (auto const &child :
              content.value("subcomponents", nlohmann::json::array()))
         {
-            append_matching_descendants(
-                matches, child, [&selector](nlohmann::json const &snapshot) {
-                    return snapshot.value("type", "") == selector.role;
-                });
+            append_matching_descendants(matches, child, selector);
         }
 
         return matches;
@@ -144,9 +171,8 @@ public:
         if (matches.size() > 1U)
         {
             throw diagnostic_error{std::format(
-                "role_name({}, {}) expected one, found {}; matches: {} \"{}\"",
-                selector.role,
-                selector.name,
+                "{} expected one, found {}; matches: {} \"{}\"",
+                selector.describe(),
                 matches.size(),
                 matches.front().role(),
                 matches.front().name())};
@@ -154,9 +180,8 @@ public:
 
         auto const visible_nodes = visible_nodes_for_missing(selector);
         auto message = std::format(
-            "role_name({}, {}) not found; visible nodes: {}",
-            selector.role,
-            selector.name,
+            "{} not found; visible nodes: {}",
+            selector.describe(),
             node_summary(visible_nodes.front()));
 
         for (auto remaining_visible = visible_nodes.begin() + 1;
@@ -177,8 +202,8 @@ public:
             if (matches.size() > 1U)
             {
                 throw diagnostic_error{std::format(
-                    "id({}) expected one, found {}; matches: {} \"{}\"",
-                    selector.id,
+                    "{} expected one, found {}; matches: {} \"{}\"",
+                    selector.describe(),
                     matches.size(),
                     matches.front().role(),
                     matches.front().name())};
@@ -188,8 +213,8 @@ public:
         }
 
         throw diagnostic_error{std::format(
-            "id({}) not found; visible nodes: {}",
-            selector.id,
+            "{} not found; visible nodes: {}",
+            selector.describe(),
             node_summary(content_node()))};
     }
 
@@ -207,7 +232,7 @@ private:
     [[nodiscard]] auto visible_nodes_for_missing(
         role_name_selector const &selector) const -> std::vector<node>
     {
-        auto visible_nodes = query(role_selector{selector.role});
+        auto visible_nodes = query(selector.role_only());
         if (visible_nodes.empty())
         {
             visible_nodes.push_back(content_node());
@@ -236,9 +261,9 @@ private:
     void append_matching_descendants(
         std::vector<node> &matches,
         nlohmann::json const &snapshot,
-        Predicate const &matches_snapshot) const
+        Predicate const &selector) const
     {
-        if (matches_snapshot(snapshot))
+        if (selector.matches(snapshot))
         {
             matches.push_back(make_node(snapshot));
         }
@@ -246,7 +271,7 @@ private:
         for (auto const &child :
              snapshot.value("subcomponents", nlohmann::json::array()))
         {
-            append_matching_descendants(matches, child, matches_snapshot);
+            append_matching_descendants(matches, child, selector);
         }
     }
 
@@ -254,9 +279,9 @@ private:
         -> std::vector<node>
     {
         auto matches = std::vector<node>{};
-        for (auto const &visible : query(role_selector{selector.role}))
+        for (auto const &visible : query(selector.role_only()))
         {
-            if (visible.name() == selector.name)
+            if (selector.matches(visible))
             {
                 matches.push_back(visible);
             }
@@ -269,12 +294,7 @@ private:
         -> std::vector<node>
     {
         auto matches = std::vector<node>{};
-        append_matching_descendants(
-            matches,
-            content_snapshot(),
-            [&selector](nlohmann::json const &snapshot) {
-                return snapshot.value("id", "") == selector.id;
-            });
+        append_matching_descendants(matches, content_snapshot(), selector);
         return matches;
     }
 
@@ -287,9 +307,8 @@ private:
 
     void click_at(terminalpp::point const &position) const
     {
-        window_.event(
-            terminalpp::mouse::event{
-                terminalpp::mouse::event_type::left_button_down, position});
+        window_.event(terminalpp::mouse::event{
+            terminalpp::mouse::event_type::left_button_down, position});
     }
 
     munin::window &window_;
