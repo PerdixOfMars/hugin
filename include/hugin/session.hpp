@@ -58,6 +58,20 @@ private:
     click_function click_;
 };
 
+enum class diagnostic_relevance
+{
+    ignore,
+    context,
+    related
+};
+
+[[nodiscard]] inline auto has_diagnostic_summary(nlohmann::json const &snapshot)
+    -> bool
+{
+    return !snapshot.value("type", "").empty()
+        && !snapshot.value("name", "").empty();
+}
+
 struct role_selector
 {
     std::string role;
@@ -79,14 +93,22 @@ struct role_name_selector
             && snapshot.value("name", "") == name;
     }
 
-    [[nodiscard]] auto role_only() const -> role_selector
-    {
-        return role_selector{role};
-    }
-
     [[nodiscard]] auto describe() const -> std::string
     {
         return std::format("role_name({}, {})", role, name);
+    }
+
+    [[nodiscard]] auto relevance(nlohmann::json const &snapshot) const
+        -> diagnostic_relevance
+    {
+        if (!has_diagnostic_summary(snapshot))
+        {
+            return diagnostic_relevance::ignore;
+        }
+
+        return snapshot.value("type", "") == role
+                 ? diagnostic_relevance::related
+                 : diagnostic_relevance::context;
     }
 };
 
@@ -103,6 +125,13 @@ struct id_selector
     {
         return std::format("id({})", id);
     }
+
+    [[nodiscard]] auto relevance(nlohmann::json const &snapshot) const
+        -> diagnostic_relevance
+    {
+        return has_diagnostic_summary(snapshot) ? diagnostic_relevance::context
+                                                : diagnostic_relevance::ignore;
+    }
 };
 
 template <typename Selector>
@@ -115,6 +144,8 @@ template <typename Selector>
 concept strict_find_selector =
     snapshot_selector<Selector> && requires(Selector const &selector) {
         { selector.describe() } -> std::convertible_to<std::string>;
+    } && requires(Selector const &selector, nlohmann::json const &snapshot) {
+        { selector.relevance(snapshot) } -> std::same_as<diagnostic_relevance>;
     };
 
 class diagnostic_error : public std::runtime_error
@@ -209,24 +240,11 @@ private:
         return window_.to_json().at("content");
     }
 
-    [[nodiscard]] auto visible_nodes_for_missing(
-        role_name_selector const &selector) const -> std::vector<node>
-    {
-        auto visible_nodes = diagnostic_nodes_matching(selector.role_only());
-        append_other_diagnostic_nodes(visible_nodes, selector.role_only());
-
-        if (visible_nodes.empty())
-        {
-            visible_nodes.push_back(content_node());
-        }
-
-        return visible_nodes;
-    }
-
-    [[nodiscard]] auto visible_nodes_for_missing(id_selector const &) const
+    template <strict_find_selector Selector>
+    [[nodiscard]] auto visible_nodes_for_missing(Selector const &selector) const
         -> std::vector<node>
     {
-        auto visible_nodes = diagnostic_nodes();
+        auto visible_nodes = diagnostic_nodes(selector);
         if (visible_nodes.empty())
         {
             visible_nodes.push_back(content_node());
@@ -245,49 +263,26 @@ private:
         return std::format("{} \"{}\"", visible.role(), visible.name());
     }
 
-    [[nodiscard]] auto diagnostic_nodes() const -> std::vector<node>
+    template <strict_find_selector Selector>
+    [[nodiscard]] auto diagnostic_nodes(Selector const &selector) const
+        -> std::vector<node>
     {
         auto nodes = std::vector<node>{};
-        append_diagnostic_nodes(nodes, content_snapshot());
+        append_diagnostic_nodes(
+            nodes, content_snapshot(), selector, diagnostic_relevance::related);
+        append_diagnostic_nodes(
+            nodes, content_snapshot(), selector, diagnostic_relevance::context);
         return nodes;
     }
 
-    [[nodiscard]] auto diagnostic_nodes_matching(
-        role_selector const &selector) const -> std::vector<node>
-    {
-        auto nodes = std::vector<node>{};
-        append_diagnostic_nodes_matching(nodes, content_snapshot(), selector);
-        return nodes;
-    }
-
-    void append_other_diagnostic_nodes(
-        std::vector<node> &nodes, role_selector const &selector) const
-    {
-        append_diagnostic_nodes_not_matching(
-            nodes, content_snapshot(), selector);
-    }
-
+    template <strict_find_selector Selector>
     void append_diagnostic_nodes(
-        std::vector<node> &nodes, nlohmann::json const &snapshot) const
-    {
-        if (has_diagnostic_summary(snapshot))
-        {
-            nodes.push_back(make_node(snapshot));
-        }
-
-        for (auto const &child :
-             snapshot.value("subcomponents", nlohmann::json::array()))
-        {
-            append_diagnostic_nodes(nodes, child);
-        }
-    }
-
-    void append_diagnostic_nodes_matching(
         std::vector<node> &nodes,
         nlohmann::json const &snapshot,
-        role_selector const &selector) const
+        Selector const &selector,
+        diagnostic_relevance relevance) const
     {
-        if (has_diagnostic_summary(snapshot) && selector.matches(snapshot))
+        if (selector.relevance(snapshot) == relevance)
         {
             nodes.push_back(make_node(snapshot));
         }
@@ -295,32 +290,8 @@ private:
         for (auto const &child :
              snapshot.value("subcomponents", nlohmann::json::array()))
         {
-            append_diagnostic_nodes_matching(nodes, child, selector);
+            append_diagnostic_nodes(nodes, child, selector, relevance);
         }
-    }
-
-    void append_diagnostic_nodes_not_matching(
-        std::vector<node> &nodes,
-        nlohmann::json const &snapshot,
-        role_selector const &selector) const
-    {
-        if (has_diagnostic_summary(snapshot) && !selector.matches(snapshot))
-        {
-            nodes.push_back(make_node(snapshot));
-        }
-
-        for (auto const &child :
-             snapshot.value("subcomponents", nlohmann::json::array()))
-        {
-            append_diagnostic_nodes_not_matching(nodes, child, selector);
-        }
-    }
-
-    [[nodiscard]] static auto has_diagnostic_summary(
-        nlohmann::json const &snapshot) -> bool
-    {
-        return !snapshot.value("type", "").empty()
-            && !snapshot.value("name", "").empty();
     }
 
     template <typename Predicate>
