@@ -341,6 +341,30 @@ TEST_F(hugin_dsl_session, clicking_button_changes_sibling_image_name)
 }
 
 TEST_F(
+    hugin_dsl_session,
+    clicking_button_inside_offset_container_activates_the_button)
+{
+    auto content = std::make_shared<munin::container>();
+    auto status = munin::make_image("Before");
+    auto offset_container = std::make_shared<munin::container>();
+    offset_container->set_layout(munin::make_vertical_strip_layout());
+    offset_container->set_position({10, 4});
+    offset_container->set_size({10, 3});
+    auto button = munin::make_button(" OK ");
+    button->on_click.connect([status] { status->set_content("After"); });
+    offset_container->add_component(button);
+    content->add_component(status);
+    content->add_component(offset_container);
+    content->set_size({30, 10});
+    auto screen = screen_with(content);
+
+    screen.ui.find(hugin::by::role_name("button", "OK")).click();
+
+    auto const image = screen.ui.find(hugin::by::role_name("image", "After"));
+    EXPECT_EQ("After", image.name());
+}
+
+TEST_F(
     hugin_dsl_session, strict_find_reports_ambiguous_button_with_a_diagnostic)
 {
     auto content = std::make_shared<munin::container>();

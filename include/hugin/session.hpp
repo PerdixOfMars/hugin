@@ -42,7 +42,10 @@ public:
     //* =====================================================================
     /// \brief Constructor
     //* =====================================================================
-    explicit node(nlohmann::json snapshot, click_function click = {});
+    explicit node(
+        nlohmann::json snapshot,
+        click_function click = {},
+        terminalpp::point click_position = {});
 
     //* =====================================================================
     /// \brief Returns the accessibility role of this node.
@@ -64,6 +67,7 @@ private:
 
     nlohmann::json snapshot_;
     click_function click_;
+    terminalpp::point click_position_;
 };
 
 //* =========================================================================
@@ -103,7 +107,7 @@ public:
         -> std::vector<node>
     {
         auto matches = std::vector<node>{};
-        append_matching_descendants(matches, content_snapshot(), selector);
+        append_matching_descendants(matches, content_snapshot(), selector, {});
         return matches;
     }
 
@@ -131,26 +135,33 @@ public:
 
 private:
     [[nodiscard]] auto content_snapshot() const -> nlohmann::json;
+    [[nodiscard]] static auto snapshot_position(nlohmann::json const &snapshot)
+        -> terminalpp::point;
 
     template <typename Predicate>
     void append_matching_descendants(
         std::vector<node> &matches,
         nlohmann::json const &snapshot,
-        Predicate const &selector) const
+        Predicate const &selector,
+        terminalpp::point const &parent_position) const
     {
+        auto const position = parent_position + snapshot_position(snapshot);
+
         if (selector.matches(snapshot))
         {
-            matches.push_back(make_node(snapshot));
+            matches.push_back(make_node(snapshot, position));
         }
 
         for (auto const &child :
              snapshot.value("subcomponents", nlohmann::json::array()))
         {
-            append_matching_descendants(matches, child, selector);
+            append_matching_descendants(matches, child, selector, position);
         }
     }
 
-    [[nodiscard]] auto make_node(nlohmann::json snapshot) const -> node;
+    [[nodiscard]] auto make_node(
+        nlohmann::json snapshot,
+        terminalpp::point click_position = {}) const -> node;
 
     void click_at(terminalpp::point const &position) const;
 
