@@ -3,6 +3,7 @@
 #include <format>
 
 namespace hugin {
+namespace detail {
 
 auto has_diagnostic_summary(nlohmann::json const &snapshot) -> bool
 {
@@ -55,22 +56,24 @@ auto id_selector::relevance(nlohmann::json const &snapshot) const
                                             : diagnostic_relevance::ignore;
 }
 
+}  // namespace detail
+
 namespace by {
 
-auto role(std::string_view role) -> role_selector
+auto role(std::string_view role) -> detail::role_selector
 {
-    return role_selector{std::string{role}};
+    return detail::role_selector{std::string{role}};
 }
 
 auto role_name(std::string_view role, std::string_view name)
-    -> role_name_selector
+    -> detail::role_name_selector
 {
-    return role_name_selector{std::string{role}, std::string{name}};
+    return detail::role_name_selector{std::string{role}, std::string{name}};
 }
 
-auto id(std::string_view id) -> id_selector
+auto id(std::string_view id) -> detail::id_selector
 {
-    return id_selector{std::string{id}};
+    return detail::id_selector{std::string{id}};
 }
 
 }  // namespace by

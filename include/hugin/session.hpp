@@ -41,7 +41,7 @@ class session
 public:
     explicit session(munin::window &window);
 
-    template <snapshot_selector Selector>
+    template <detail::snapshot_selector Selector>
     [[nodiscard]] auto query(Selector const &selector) const
         -> std::vector<node>
     {
@@ -50,7 +50,7 @@ public:
         return matches;
     }
 
-    template <strict_find_selector Selector>
+    template <detail::strict_find_selector Selector>
     [[nodiscard]] auto find(Selector const &selector) const -> node
     {
         auto const matches = query(selector);
@@ -60,7 +60,7 @@ public:
             return matches.front();
         }
 
-        throw diagnostic_error{strict_find_failure_message(
+        throw diagnostic_error{detail::strict_find_failure_message(
             selector,
             matches,
             content_snapshot(),

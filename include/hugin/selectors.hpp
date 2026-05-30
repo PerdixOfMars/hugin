@@ -7,6 +7,7 @@
 #include <string_view>
 
 namespace hugin {
+namespace detail {
 
 enum class diagnostic_relevance
 {
@@ -64,14 +65,16 @@ concept strict_find_selector =
         { selector.relevance(snapshot) } -> std::same_as<diagnostic_relevance>;
     };
 
+}  // namespace detail
+
 namespace by {
 
-auto role(std::string_view role) -> role_selector;
+auto role(std::string_view role) -> detail::role_selector;
 
 auto role_name(std::string_view role, std::string_view name)
-    -> role_name_selector;
+    -> detail::role_name_selector;
 
-auto id(std::string_view id) -> id_selector;
+auto id(std::string_view id) -> detail::id_selector;
 
 }  // namespace by
 

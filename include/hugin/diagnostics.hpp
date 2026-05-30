@@ -17,6 +17,8 @@ public:
     explicit diagnostic_error(std::string const &message);
 };
 
+namespace detail {
+
 template <typename Node>
 [[nodiscard]] auto node_summary(Node const &visible) -> std::string
 {
@@ -103,5 +105,7 @@ template <strict_find_selector Selector, typename Node, typename MakeNode>
 
     return message;
 }
+
+}  // namespace detail
 
 }  // namespace hugin
