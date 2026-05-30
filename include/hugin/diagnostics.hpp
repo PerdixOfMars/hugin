@@ -14,10 +14,7 @@ namespace hugin {
 class diagnostic_error : public std::runtime_error
 {
 public:
-    explicit diagnostic_error(std::string const &message)
-      : std::runtime_error(message)
-    {
-    }
+    explicit diagnostic_error(std::string const &message);
 };
 
 template <typename Node>
