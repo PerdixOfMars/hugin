@@ -2,6 +2,20 @@
 
 This context defines the automation vocabulary specific to Hugin as a UI testing framework for Munin interfaces. It exists to separate Hugin's query and execution language from the lower-level UI facts exposed by Munin.
 
+## Current public interface terminology
+
+**Hugin** is a UI automation and testing DSL over Munin windows. Its public vocabulary is built around **Automation Sessions**, **Selectors**, **Nodes**, and **Diagnostic Exceptions**.
+
+An **Automation Session** is the user-facing object that queries one `munin::window`, finds **Nodes**, and routes node **Actions** back to that window.
+
+A **Node** is a lightweight handle to one matched item in an **Automation Snapshot**. It exposes user-facing facts such as role and accessible name, and it can perform supported interactions such as **Node Click**.
+
+Public selector construction is expressed through `hugin::by`, such as role, role-and-name, and automation-id selectors. Concrete selector types are implementation details rather than domain vocabulary that tests should name directly.
+
+**Strict Find** means exactly one match. If no node or multiple nodes match, Hugin throws a **Diagnostic Exception** that explains the failed selector and summarizes relevant visible nodes.
+
+**Diagnostics** are user-facing failure reports for executable UI specifications. They should explain failed automation assertions in selector and visible-node terms, not as raw JSON dumps or generic assertion text.
+
 ## Language
 
 **C++ Testing DSL**:
