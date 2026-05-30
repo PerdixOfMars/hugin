@@ -16,17 +16,47 @@ class window;
 
 namespace hugin {
 
+//* =========================================================================
+/// \brief A matched UI element in a Hugin automation session.
+///
+/// A node is a lightweight handle to a component snapshot returned by
+/// session::query() or session::find().  It exposes the component's role and
+/// accessible name, and can perform supported actions such as clicking.
+///
+/// \par Usage
+/// \code
+/// hugin::session ui(window);
+///
+/// auto button = ui.find(hugin::by::role_name("button", "OK"));
+/// EXPECT_EQ("button", button.role());
+/// EXPECT_EQ("OK", button.name());
+///
+/// button.click();
+/// \endcode
+//* =========================================================================
 class node
 {
 public:
     using click_function = std::function<void(terminalpp::point const &)>;
 
+    //* =====================================================================
+    /// \brief Constructor
+    //* =====================================================================
     explicit node(nlohmann::json snapshot, click_function click = {});
 
+    //* =====================================================================
+    /// \brief Returns the accessibility role of this node.
+    //* =====================================================================
     [[nodiscard]] auto role() const -> std::string;
 
+    //* =====================================================================
+    /// \brief Returns the accessible name of this node.
+    //* =====================================================================
     [[nodiscard]] auto name() const -> std::string;
 
+    //* =====================================================================
+    /// \brief Clicks this node if it has a click action.
+    //* =====================================================================
     void click() const;
 
 private:
@@ -36,11 +66,38 @@ private:
     click_function click_;
 };
 
+//* =========================================================================
+/// \brief A query and interaction session for a Munin window.
+///
+/// A session is the main public entry point for Hugin.  It reads the JSON
+/// snapshot exposed by a munin::window, finds nodes using selectors from
+/// hugin::by, and routes node actions back to the underlying window.
+///
+/// Use query() when zero or more matching nodes are expected.  Use find()
+/// when exactly one node is expected; it throws hugin::diagnostic_error with
+/// visible UI context if no node, or more than one node, matches.
+///
+/// \par Usage
+/// \code
+/// hugin::session ui(window);
+///
+/// auto buttons = ui.query(hugin::by::role("button"));
+///
+/// auto save = ui.find(hugin::by::role_name("button", "Save"));
+/// save.click();
+/// \endcode
+//* =========================================================================
 class session
 {
 public:
+    //* =====================================================================
+    /// \brief Constructor
+    //* =====================================================================
     explicit session(munin::window &window);
 
+    //* =====================================================================
+    /// \brief Returns all nodes matching the selector.
+    //* =====================================================================
     template <detail::snapshot_selector Selector>
     [[nodiscard]] auto query(Selector const &selector) const
         -> std::vector<node>
@@ -50,6 +107,9 @@ public:
         return matches;
     }
 
+    //* =====================================================================
+    /// \brief Returns the one node matching the selector, or throws.
+    //* =====================================================================
     template <detail::strict_find_selector Selector>
     [[nodiscard]] auto find(Selector const &selector) const -> node
     {

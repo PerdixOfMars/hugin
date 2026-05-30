@@ -11,9 +11,32 @@
 
 namespace hugin {
 
+//* =========================================================================
+/// \brief An exception that describes why a strict Hugin query failed.
+///
+/// diagnostic_error is thrown by session::find() when a selector does not
+/// identify exactly one node.  The message includes the selector description
+/// and a summary of relevant visible nodes to make failed UI automation
+/// assertions easier to diagnose.
+///
+/// \par Usage
+/// \code
+/// try
+/// {
+///     (void)ui.find(hugin::by::role_name("button", "Cancel"));
+/// }
+/// catch (hugin::diagnostic_error const &error)
+/// {
+///     EXPECT_THAT(error.what(), testing::HasSubstr("visible nodes"));
+/// }
+/// \endcode
+//* =========================================================================
 class diagnostic_error : public std::runtime_error
 {
 public:
+    //* =====================================================================
+    /// \brief Constructor
+    //* =====================================================================
     explicit diagnostic_error(std::string const &message);
 };
 
