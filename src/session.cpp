@@ -63,6 +63,18 @@ void session::send_keys(
     }
 }
 
+void session::send_text(std::string_view text) const
+{
+    for (auto const ch : text)
+    {
+        send_key(terminalpp::virtual_key{
+            static_cast<terminalpp::vk>(ch),
+            terminalpp::vk_modifier::none,
+            1,
+            terminalpp::byte(ch)});
+    }
+}
+
 auto session::content_snapshot() const -> nlohmann::json
 {
     return window_.to_json().at("content");

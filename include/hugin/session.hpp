@@ -8,6 +8,7 @@
 #include <functional>
 #include <initializer_list>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -118,6 +119,11 @@ public:
     /// \brief Sends keypresses through the native Munin event path.
     //* =====================================================================
     void send_keys(std::initializer_list<terminalpp::virtual_key> keys) const;
+
+    //* =====================================================================
+    /// \brief Sends text as keypresses through the native Munin event path.
+    //* =====================================================================
+    void send_text(std::string_view text) const;
 
     //* =====================================================================
     /// \brief Returns all nodes matching the selector.

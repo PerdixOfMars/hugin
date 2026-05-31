@@ -397,6 +397,15 @@ TEST_F(hugin_dsl_session, sends_multiple_virtual_keys_to_the_focused_edit)
     EXPECT_EQ("ab", edit_text(screen.ui));
 }
 
+TEST_F(hugin_dsl_session, sends_text_to_the_focused_edit_as_keypresses)
+{
+    auto screen = screen_with_focused_edit();
+
+    screen.ui.send_text("ab");
+
+    EXPECT_EQ("ab", edit_text(screen.ui));
+}
+
 TEST_F(
     hugin_dsl_session,
     clicking_button_inside_offset_container_activates_the_button)
