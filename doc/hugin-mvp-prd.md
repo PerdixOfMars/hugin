@@ -21,7 +21,7 @@ Under the DSL, Hugin will consume Munin's existing `to_json()`-based introspecti
 5. [x] As a UI test author, I want to assert that a component's current type matches the expected semantic role, so that I can verify user-facing meaning rather than raw terminal output.
 6. [x] As a UI test author, I want to locate a control by semantic role plus accessible name, so that tests can target user-visible controls without scraping terminal rendering.
 7. [ ] As a UI test author, I want to inspect the raw introspection JSON when helpers are insufficient, so that I can debug failing tests without waiting for new helper APIs.
-8. [ ] As a UI test author, I want to send keyboard input through the native Munin event path, so that tests exercise the same behavior as real users.
+8. [x] As a UI test author, I want to send keyboard input through the native Munin event path, so that tests exercise the same behavior as real users.
 9. [x] As a UI test author, I want to send mouse input through the native Munin event path, so that pointer interactions are tested honestly.
 10. [ ] As a UI test author, I want to move focus through normal keyboard navigation, so that I can verify focus behavior and input routing.
 11. [ ] As a UI test author, I want to assert the currently focused leaf component, so that I can verify navigational behavior precisely.
