@@ -6,6 +6,7 @@
 #include <terminalpp/point.hpp>
 
 #include <functional>
+#include <initializer_list>
 #include <string>
 #include <utility>
 #include <vector>
@@ -112,6 +113,11 @@ public:
     /// \brief Sends one keypress through the native Munin event path.
     //* =====================================================================
     void send_key(terminalpp::virtual_key const &key) const;
+
+    //* =====================================================================
+    /// \brief Sends keypresses through the native Munin event path.
+    //* =====================================================================
+    void send_keys(std::initializer_list<terminalpp::virtual_key> keys) const;
 
     //* =====================================================================
     /// \brief Returns all nodes matching the selector.

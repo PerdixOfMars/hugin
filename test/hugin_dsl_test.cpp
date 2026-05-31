@@ -367,6 +367,27 @@ TEST_F(hugin_dsl_session, sends_a_virtual_key_to_the_focused_edit)
     EXPECT_EQ("a", updated_edit.raw_json().at("text"));
 }
 
+TEST_F(hugin_dsl_session, sends_multiple_virtual_keys_to_the_focused_edit)
+{
+    auto edit = munin::make_edit() | munin::with_id("name");
+    edit->set_focus();
+    auto screen = screen_with(edit);
+
+    screen.ui.send_keys({
+        terminalpp::virtual_key{
+                                terminalpp::vk::lowercase_a,
+                                terminalpp::vk_modifier::none,
+                                1, terminalpp::byte{'a'}},
+        terminalpp::virtual_key{
+                                terminalpp::vk::lowercase_b,
+                                terminalpp::vk_modifier::none,
+                                1, terminalpp::byte{'b'}},
+    });
+
+    auto const updated_edit = screen.ui.find(hugin::by::id("name"));
+    EXPECT_EQ("ab", updated_edit.raw_json().at("text"));
+}
+
 TEST_F(
     hugin_dsl_session,
     clicking_button_inside_offset_container_activates_the_button)

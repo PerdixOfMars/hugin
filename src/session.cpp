@@ -54,6 +54,15 @@ void session::send_key(terminalpp::virtual_key const &key) const
     window_.event(key);
 }
 
+void session::send_keys(
+    std::initializer_list<terminalpp::virtual_key> keys) const
+{
+    for (auto const &key : keys)
+    {
+        send_key(key);
+    }
+}
+
 auto session::content_snapshot() const -> nlohmann::json
 {
     return window_.to_json().at("content");
