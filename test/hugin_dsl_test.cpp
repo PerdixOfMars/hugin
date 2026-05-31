@@ -203,6 +203,15 @@ TEST_F(hugin_dsl_session, strict_find_returns_a_button_matching_role_and_name)
     EXPECT_EQ("OK", button.name());
 }
 
+TEST_F(hugin_dsl_session, found_node_exposes_its_raw_json_snapshot)
+{
+    auto screen = screen_with_single_button();
+
+    auto const button = screen.ui.find(hugin::by::role_name("button", "OK"));
+
+    EXPECT_EQ("button", button.raw_json().at("type"));
+}
+
 TEST_F(hugin_dsl_session, strict_find_returns_a_button_matching_automation_id)
 {
     auto screen =

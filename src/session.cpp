@@ -26,6 +26,11 @@ auto node::name() const -> std::string
     return snapshot_.value("name", "");
 }
 
+auto node::raw_json() const -> nlohmann::json const &
+{
+    return snapshot_;
+}
+
 void node::click() const
 {
     if (click_)

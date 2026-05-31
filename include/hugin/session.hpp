@@ -58,6 +58,11 @@ public:
     [[nodiscard]] auto name() const -> std::string;
 
     //* =====================================================================
+    /// \brief Returns this node's raw Introspection JSON snapshot.
+    //* =====================================================================
+    [[nodiscard]] auto raw_json() const -> nlohmann::json const &;
+
+    //* =====================================================================
     /// \brief Clicks this node if it has a click action.
     //* =====================================================================
     void click() const;
