@@ -1,6 +1,7 @@
 #include <hugin/session.hpp>
 #include <munin/window.hpp>
 #include <terminalpp/mouse.hpp>
+#include <terminalpp/virtual_key.hpp>
 
 #include <utility>
 
@@ -46,6 +47,11 @@ auto node::click_position() const -> terminalpp::point
 
 session::session(munin::window &window) : window_(window)
 {
+}
+
+void session::send_key(terminalpp::virtual_key const &key) const
+{
+    window_.event(key);
 }
 
 auto session::content_snapshot() const -> nlohmann::json

@@ -14,6 +14,10 @@ namespace munin {
 class window;
 }
 
+namespace terminalpp {
+struct virtual_key;
+}
+
 namespace hugin {
 
 //* =========================================================================
@@ -103,6 +107,11 @@ public:
     /// \brief Constructor
     //* =====================================================================
     explicit session(munin::window &window);
+
+    //* =====================================================================
+    /// \brief Sends one keypress through the native Munin event path.
+    //* =====================================================================
+    void send_key(terminalpp::virtual_key const &key) const;
 
     //* =====================================================================
     /// \brief Returns all nodes matching the selector.

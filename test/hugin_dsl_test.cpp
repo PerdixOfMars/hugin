@@ -2,11 +2,13 @@
 #include <hugin/session.hpp>
 #include <munin/button.hpp>
 #include <munin/container.hpp>
+#include <munin/edit.hpp>
 #include <munin/image.hpp>
 #include <munin/vertical_strip_layout.hpp>
 #include <munin/window.hpp>
 #include <terminalpp/core.hpp>
 #include <terminalpp/terminal.hpp>
+#include <terminalpp/virtual_key.hpp>
 
 #include <functional>
 #include <initializer_list>
@@ -347,6 +349,22 @@ TEST_F(hugin_dsl_session, clicking_button_changes_sibling_image_name)
 
     auto const image = screen.ui.find(hugin::by::role_name("image", "After"));
     EXPECT_EQ("After", image.name());
+}
+
+TEST_F(hugin_dsl_session, sends_a_virtual_key_to_the_focused_edit)
+{
+    auto edit = munin::make_edit() | munin::with_id("name");
+    edit->set_focus();
+    auto screen = screen_with(edit);
+
+    screen.ui.send_key(terminalpp::virtual_key{
+        terminalpp::vk::lowercase_a,
+        terminalpp::vk_modifier::none,
+        1,
+        terminalpp::byte{'a'}});
+
+    auto const updated_edit = screen.ui.find(hugin::by::id("name"));
+    EXPECT_EQ("a", updated_edit.raw_json().at("text"));
 }
 
 TEST_F(
