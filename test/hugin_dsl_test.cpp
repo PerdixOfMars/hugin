@@ -80,6 +80,21 @@ protected:
         return dsl_screen{terminal, content};
     }
 
+    [[nodiscard]] auto screen_with_focused_edit() -> dsl_screen
+    {
+        auto edit = munin::make_edit() | munin::with_id("name");
+        edit->set_focus();
+        return screen_with(edit);
+    }
+
+    static auto edit_text(hugin::session &ui) -> std::string
+    {
+        return ui.find(hugin::by::id("name"))
+            .raw_json()
+            .at("text")
+            .get<std::string>();
+    }
+
     static void add_button_under_intermediate_containers(
         std::shared_ptr<munin::container> const &content,
         std::size_t intermediate_container_count,
@@ -353,9 +368,7 @@ TEST_F(hugin_dsl_session, clicking_button_changes_sibling_image_name)
 
 TEST_F(hugin_dsl_session, sends_a_virtual_key_to_the_focused_edit)
 {
-    auto edit = munin::make_edit() | munin::with_id("name");
-    edit->set_focus();
-    auto screen = screen_with(edit);
+    auto screen = screen_with_focused_edit();
 
     screen.ui.send_key(terminalpp::virtual_key{
         terminalpp::vk::lowercase_a,
@@ -363,15 +376,12 @@ TEST_F(hugin_dsl_session, sends_a_virtual_key_to_the_focused_edit)
         1,
         terminalpp::byte{'a'}});
 
-    auto const updated_edit = screen.ui.find(hugin::by::id("name"));
-    EXPECT_EQ("a", updated_edit.raw_json().at("text"));
+    EXPECT_EQ("a", edit_text(screen.ui));
 }
 
 TEST_F(hugin_dsl_session, sends_multiple_virtual_keys_to_the_focused_edit)
 {
-    auto edit = munin::make_edit() | munin::with_id("name");
-    edit->set_focus();
-    auto screen = screen_with(edit);
+    auto screen = screen_with_focused_edit();
 
     screen.ui.send_keys({
         terminalpp::virtual_key{
@@ -384,8 +394,7 @@ TEST_F(hugin_dsl_session, sends_multiple_virtual_keys_to_the_focused_edit)
                                 1, terminalpp::byte{'b'}},
     });
 
-    auto const updated_edit = screen.ui.find(hugin::by::id("name"));
-    EXPECT_EQ("ab", updated_edit.raw_json().at("text"));
+    EXPECT_EQ("ab", edit_text(screen.ui));
 }
 
 TEST_F(
