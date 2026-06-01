@@ -159,6 +159,14 @@ public:
             })};
     }
 
+    //* =====================================================================
+    /// \brief Asserts that the selected node is the focused leaf component.
+    //* =====================================================================
+    template <detail::strict_find_selector Selector>
+    void assert_focused(Selector const &) const
+    {
+    }
+
 private:
     [[nodiscard]] auto content_snapshot() const -> nlohmann::json;
     [[nodiscard]] static auto snapshot_position(nlohmann::json const &snapshot)

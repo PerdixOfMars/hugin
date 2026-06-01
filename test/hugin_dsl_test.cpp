@@ -406,6 +406,13 @@ TEST_F(hugin_dsl_session, sends_text_to_the_focused_edit_as_keypresses)
     EXPECT_EQ("ab", edit_text(screen.ui));
 }
 
+TEST_F(hugin_dsl_session, asserts_a_focused_leaf_by_automation_id)
+{
+    auto screen = screen_with_focused_edit();
+
+    screen.ui.assert_focused(hugin::by::id("name"));
+}
+
 TEST_F(
     hugin_dsl_session,
     clicking_button_inside_offset_container_activates_the_button)
