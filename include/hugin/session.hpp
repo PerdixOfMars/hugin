@@ -168,9 +168,7 @@ public:
         auto const selected = find(selector);
         auto const &snapshot = selected.raw_json();
 
-        if (!snapshot.value("has_focus", false)
-            || !snapshot.value("subcomponents", nlohmann::json::array())
-                    .empty())
+        if (!is_focused_leaf(snapshot))
         {
             throw diagnostic_error{
                 selector.describe() + " is not focused leaf"};
@@ -181,6 +179,12 @@ private:
     [[nodiscard]] auto content_snapshot() const -> nlohmann::json;
     [[nodiscard]] static auto snapshot_position(nlohmann::json const &snapshot)
         -> terminalpp::point;
+    [[nodiscard]] static auto is_focused_leaf(nlohmann::json const &snapshot)
+        -> bool
+    {
+        return snapshot.value("has_focus", false)
+            && snapshot.value("subcomponents", nlohmann::json::array()).empty();
+    }
 
     template <typename Predicate>
     void append_matching_descendants(
