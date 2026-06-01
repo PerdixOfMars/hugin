@@ -106,22 +106,20 @@ protected:
             .get<std::string>();
     }
 
-    static auto tab_key() -> terminalpp::virtual_key
+    static auto keypress(terminalpp::vk key) -> terminalpp::virtual_key
     {
         return terminalpp::virtual_key{
-            terminalpp::vk::ht,
-            terminalpp::vk_modifier::none,
-            1,
-            terminalpp::byte{'\t'}};
+            key, terminalpp::vk_modifier::none, 1, terminalpp::byte{'\t'}};
+    }
+
+    static auto tab_key() -> terminalpp::virtual_key
+    {
+        return keypress(terminalpp::vk::ht);
     }
 
     static auto back_tab_key() -> terminalpp::virtual_key
     {
-        return terminalpp::virtual_key{
-            terminalpp::vk::bt,
-            terminalpp::vk_modifier::none,
-            1,
-            terminalpp::byte{'\t'}};
+        return keypress(terminalpp::vk::bt);
     }
 
     static void add_button_under_intermediate_containers(
