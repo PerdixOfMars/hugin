@@ -163,8 +163,14 @@ public:
     /// \brief Asserts that the selected node is the focused leaf component.
     //* =====================================================================
     template <detail::strict_find_selector Selector>
-    void assert_focused(Selector const &) const
+    void assert_focused(Selector const &selector) const
     {
+        auto const selected = find(selector);
+
+        if (!selected.raw_json().value("has_focus", false))
+        {
+            throw diagnostic_error{selector.describe() + " is not focused"};
+        }
     }
 
 private:
