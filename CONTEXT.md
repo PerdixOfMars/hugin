@@ -90,6 +90,14 @@ _Avoid_: Global server monitor, multi-client broadcast
 A Hugin claim about the current Munin focus state, typically over the **Focused Leaf** and sometimes over the full **Focus Path**.
 _Avoid_: Cursor guess, visual highlight scrape
 
+**Focused Leaf Assertion**:
+A Hugin **Focus Assertion** that verifies a selected **Node** is the current **Focused Leaf**, not merely a focused ancestor container.
+_Avoid_: Focused container assertion, first focused node check
+
+**Focus Path Query**:
+A Hugin query that returns the current Munin **Focus Path** as ordered, **Snapshot-Bound Nodes** from the inspected content root through focused ancestors to the **Focused Leaf**.
+_Avoid_: Leaf-only focus query, unordered focused-node set
+
 **Primitive Action**:
 A minimal Hugin-issued input operation such as a keyboard press or mouse interaction from which richer conveniences are composed.
 _Avoid_: Compound helper, test-script macro
@@ -124,6 +132,8 @@ _Avoid_: Push subscription, implicit background listener
 - A **Node** present in an **Automation Snapshot** is considered available for Hugin selection; Hugin does not define a separate visibility concept unless Munin exposes one
 - An **Automation Session** owns the sequence of **Automation Snapshots** and **Actions** for one inspected UI surface
 - A **Focus Assertion** is evaluated against the focus facts present in an **Automation Snapshot**
+- A **Focused Leaf Assertion** fails when the selected **Node** is a focused ancestor container rather than the **Focused Leaf**
+- A **Focus Path Query** exposes the broader **Focus Path** for diagnostics and container-owned focus behavior without changing the default focused-leaf assertion target
 - A **Convenience Action** is composed from one or more **Primitive Actions**
 - A **Wait Condition** is re-evaluated across successive **Automation Snapshot**s within one **Automation Session**
 
@@ -189,6 +199,12 @@ _Avoid_: Push subscription, implicit background listener
 > **Dev:** "When I assert focus, am I talking about one node or the whole nesting chain?"
 > **Domain expert:** "Usually the **Focused Leaf**, but Hugin may also expose **Focus Assertions** over the full Munin focus path."
 
+> **Dev:** "Can `assert_focused(@panel)` pass when the panel contains the focused edit?"
+> **Domain expert:** "No — a focused ancestor container is part of the **Focus Path**, but `assert_focused` targets the **Focused Leaf**."
+
+> **Dev:** "How do I inspect the focused containers too?"
+> **Domain expert:** "Use a **Focus Path Query**; it returns the ordered path as snapshot-bound **Nodes**."
+
 > **Dev:** "Is `click(@ok_button)` part of the transport contract?"
 > **Domain expert:** "No — that is a **Convenience Action** built from **Primitive Actions** such as target resolution and mouse input."
 
@@ -213,6 +229,8 @@ _Avoid_: Push subscription, implicit background listener
 - "current UI state" risked implying a live subscription model; resolved: **Automation Snapshot** means an explicit point-in-time read of the automation data
 - "connection" risked meaning either a whole-server control channel or a per-UI test interaction; resolved: **Automation Session** means the Hugin interaction scope for one inspected UI surface
 - "focus assertion" risked assuming Munin had only a single focused node; resolved: Hugin's default target is usually the Munin **Focused Leaf**, while the broader focus chain remains available
+- "focused" risked accepting any focused ancestor; resolved: Hugin's focused-leaf assertion requires the selected node to be the innermost focused target
+- "focus path" risked meaning an unordered list of focused nodes; resolved: a Hugin **Focus Path Query** returns ordered **Snapshot-Bound Nodes** from root to leaf
 - "action API" risked conflating low-level input with ergonomic helpers; resolved: **Primitive Actions** form the contract and **Convenience Actions** are layered on top
 - "wait" risked implying event subscriptions inside Munin; resolved: a **Wait Condition** is a Hugin-side polling construct over repeated snapshots
 - "DSL" risked meaning a separate textual language; resolved: the MVP **C++ Testing DSL** is the public C++ executable-specification vocabulary, while textual scripts remain out of scope
