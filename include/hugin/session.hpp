@@ -180,7 +180,9 @@ public:
     //* =====================================================================
     [[nodiscard]] auto focus_path() const -> std::vector<node>
     {
-        return {};
+        auto path = std::vector<node>{};
+        append_focused_path(path, content_snapshot());
+        return path;
     }
 
 private:
@@ -192,6 +194,21 @@ private:
     {
         return snapshot.value("has_focus", false)
             && snapshot.value("subcomponents", nlohmann::json::array()).empty();
+    }
+
+    void append_focused_path(
+        std::vector<node> &path, nlohmann::json const &snapshot) const
+    {
+        if (snapshot.value("has_focus", false))
+        {
+            path.push_back(make_node(snapshot));
+        }
+
+        for (auto const &child :
+             snapshot.value("subcomponents", nlohmann::json::array()))
+        {
+            append_focused_path(path, child);
+        }
     }
 
     template <typename Predicate>

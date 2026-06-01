@@ -490,6 +490,24 @@ TEST_F(hugin_dsl_session, exposes_the_current_focus_path)
     (void)screen.ui.focus_path();
 }
 
+TEST_F(hugin_dsl_session, focus_path_contains_focused_ancestors_and_leaf)
+{
+    auto content = std::make_shared<munin::container>();
+    auto panel = std::make_shared<munin::container>() | munin::with_id("panel");
+    auto edit = munin::make_edit() | munin::with_id("name");
+    panel->add_component(edit);
+    content->add_component(panel);
+    edit->set_focus();
+    auto screen = screen_with(content);
+
+    auto const path = screen.ui.focus_path();
+
+    ASSERT_EQ(3U, path.size());
+    EXPECT_EQ("container", path[0].role());
+    EXPECT_EQ("panel", path[1].raw_json().at("id"));
+    EXPECT_EQ("name", path[2].raw_json().at("id"));
+}
+
 TEST_F(
     hugin_dsl_session,
     clicking_button_inside_offset_container_activates_the_button)
