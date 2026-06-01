@@ -87,6 +87,17 @@ protected:
         return screen_with(edit);
     }
 
+    [[nodiscard]] auto screen_with_focused_edit_and_button() -> dsl_screen
+    {
+        auto content = std::make_shared<munin::container>();
+        auto edit = munin::make_edit() | munin::with_id("name");
+        auto button = munin::make_button(" Save ") | munin::with_id("save");
+        content->add_component(edit);
+        content->add_component(button);
+        edit->set_focus();
+        return screen_with(content);
+    }
+
     static auto edit_text(hugin::session &ui) -> std::string
     {
         return ui.find(hugin::by::id("name"))
@@ -415,13 +426,7 @@ TEST_F(hugin_dsl_session, asserts_a_focused_leaf_by_automation_id)
 
 TEST_F(hugin_dsl_session, focused_assertion_fails_for_an_unfocused_leaf)
 {
-    auto content = std::make_shared<munin::container>();
-    auto edit = munin::make_edit() | munin::with_id("name");
-    auto button = munin::make_button(" Save ") | munin::with_id("save");
-    content->add_component(edit);
-    content->add_component(button);
-    edit->set_focus();
-    auto screen = screen_with(content);
+    auto screen = screen_with_focused_edit_and_button();
 
     EXPECT_THROW(
         screen.ui.assert_focused(hugin::by::id("save")),
