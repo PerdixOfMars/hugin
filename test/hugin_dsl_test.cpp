@@ -115,6 +115,15 @@ protected:
             terminalpp::byte{'\t'}};
     }
 
+    static auto back_tab_key() -> terminalpp::virtual_key
+    {
+        return terminalpp::virtual_key{
+            terminalpp::vk::bt,
+            terminalpp::vk_modifier::none,
+            1,
+            terminalpp::byte{'\t'}};
+    }
+
     static void add_button_under_intermediate_containers(
         std::shared_ptr<munin::container> const &content,
         std::size_t intermediate_container_count,
@@ -464,6 +473,16 @@ TEST_F(hugin_dsl_session, tab_moves_focus_to_the_next_leaf)
     screen.ui.send_key(tab_key());
 
     screen.ui.assert_focused(hugin::by::id("save"));
+}
+
+TEST_F(hugin_dsl_session, back_tab_moves_focus_to_the_previous_leaf)
+{
+    auto screen = screen_with_focused_edit_and_button();
+    screen.ui.send_key(tab_key());
+
+    screen.ui.send_key(back_tab_key());
+
+    screen.ui.assert_focused(hugin::by::id("name"));
 }
 
 TEST_F(
