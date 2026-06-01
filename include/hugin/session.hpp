@@ -166,10 +166,14 @@ public:
     void assert_focused(Selector const &selector) const
     {
         auto const selected = find(selector);
+        auto const &snapshot = selected.raw_json();
 
-        if (!selected.raw_json().value("has_focus", false))
+        if (!snapshot.value("has_focus", false)
+            || !snapshot.value("subcomponents", nlohmann::json::array())
+                    .empty())
         {
-            throw diagnostic_error{selector.describe() + " is not focused"};
+            throw diagnostic_error{
+                selector.describe() + " is not focused leaf"};
         }
     }
 

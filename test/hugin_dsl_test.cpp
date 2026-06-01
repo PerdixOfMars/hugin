@@ -428,6 +428,21 @@ TEST_F(hugin_dsl_session, focused_assertion_fails_for_an_unfocused_leaf)
         hugin::diagnostic_error);
 }
 
+TEST_F(hugin_dsl_session, focused_assertion_fails_for_a_focused_container)
+{
+    auto content = std::make_shared<munin::container>();
+    auto panel = std::make_shared<munin::container>() | munin::with_id("panel");
+    auto edit = munin::make_edit() | munin::with_id("name");
+    panel->add_component(edit);
+    content->add_component(panel);
+    edit->set_focus();
+    auto screen = screen_with(content);
+
+    EXPECT_THROW(
+        screen.ui.assert_focused(hugin::by::id("panel")),
+        hugin::diagnostic_error);
+}
+
 TEST_F(
     hugin_dsl_session,
     clicking_button_inside_offset_container_activates_the_button)
