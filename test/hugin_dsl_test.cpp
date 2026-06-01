@@ -483,6 +483,13 @@ TEST_F(hugin_dsl_session, back_tab_moves_focus_to_the_previous_leaf)
     screen.ui.assert_focused(hugin::by::id("name"));
 }
 
+TEST_F(hugin_dsl_session, exposes_the_current_focus_path)
+{
+    auto screen = screen_with_focused_edit();
+
+    (void)screen.ui.focus_path();
+}
+
 TEST_F(
     hugin_dsl_session,
     clicking_button_inside_offset_container_activates_the_button)

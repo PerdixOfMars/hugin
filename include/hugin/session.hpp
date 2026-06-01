@@ -175,6 +175,14 @@ public:
         }
     }
 
+    //* =====================================================================
+    /// \brief Returns the currently focused component path.
+    //* =====================================================================
+    [[nodiscard]] auto focus_path() const -> std::vector<node>
+    {
+        return {};
+    }
+
 private:
     [[nodiscard]] auto content_snapshot() const -> nlohmann::json;
     [[nodiscard]] static auto snapshot_position(nlohmann::json const &snapshot)
