@@ -25,7 +25,7 @@ Under the DSL, Hugin will consume Munin's existing `to_json()`-based introspecti
 9. [x] As a UI test author, I want to send mouse input through the native Munin event path, so that pointer interactions are tested honestly.
 10. [x] As a UI test author, I want to move focus through normal keyboard navigation, so that I can verify focus behavior and input routing.
 11. [x] As a UI test author, I want to assert the currently focused leaf component, so that I can verify navigational behavior precisely.
-12. [ ] As a UI test author, I want access to the broader focus path when needed, so that container-owned focus behavior remains visible in diagnostics.
+12. [x] As a UI test author, I want access to the broader focus path when needed, so that container-owned focus behavior remains visible in diagnostics.
 13. [ ] As a UI test author, I want to wait for a condition by polling fresh snapshots until timeout, so that asynchronous or multi-step UI changes can be tested deterministically.
 14. [ ] As a UI test author, I want a small explicit C++ DSL of sessions, selectors, nodes, actions, assertions, and waits, so that tests express user-visible UI contracts clearly.
 15. [ ] As a UI test author, I want DSL failures to explain the selector, matched or missing nodes, current focus, and recent actions, so that broken UI contracts are quick to diagnose.
