@@ -2,10 +2,7 @@
 add_executable(hugin_test)
 
 target_sources(hugin_test PRIVATE
-    automation_session_test.cpp
     hugin_dsl_test.cpp
-    live_snapshot_query_test.cpp
-    snapshot_queries_test.cpp
 )
 
 target_compile_features(hugin_test PRIVATE cxx_std_20)

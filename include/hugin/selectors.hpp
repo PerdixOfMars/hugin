@@ -3,11 +3,11 @@
 #include <nlohmann/json.hpp>
 
 #include <concepts>
-#include <format>
 #include <string>
 #include <string_view>
 
 namespace hugin {
+namespace detail {
 
 enum class diagnostic_relevance
 {
@@ -16,21 +16,14 @@ enum class diagnostic_relevance
     related
 };
 
-[[nodiscard]] inline auto has_diagnostic_summary(nlohmann::json const &snapshot)
-    -> bool
-{
-    return !snapshot.value("type", "").empty()
-        && !snapshot.value("name", "").empty();
-}
+[[nodiscard]] auto has_diagnostic_summary(nlohmann::json const &snapshot)
+    -> bool;
 
 struct role_selector
 {
     std::string role;
 
-    [[nodiscard]] auto matches(nlohmann::json const &snapshot) const -> bool
-    {
-        return snapshot.value("type", "") == role;
-    }
+    [[nodiscard]] auto matches(nlohmann::json const &snapshot) const -> bool;
 };
 
 struct role_name_selector
@@ -38,51 +31,24 @@ struct role_name_selector
     std::string role;
     std::string name;
 
-    [[nodiscard]] auto matches(nlohmann::json const &snapshot) const -> bool
-    {
-        return snapshot.value("type", "") == role
-            && snapshot.value("name", "") == name;
-    }
+    [[nodiscard]] auto matches(nlohmann::json const &snapshot) const -> bool;
 
-    [[nodiscard]] auto describe() const -> std::string
-    {
-        return std::format("role_name({}, {})", role, name);
-    }
+    [[nodiscard]] auto describe() const -> std::string;
 
     [[nodiscard]] auto relevance(nlohmann::json const &snapshot) const
-        -> diagnostic_relevance
-    {
-        if (!has_diagnostic_summary(snapshot))
-        {
-            return diagnostic_relevance::ignore;
-        }
-
-        return snapshot.value("type", "") == role
-                 ? diagnostic_relevance::related
-                 : diagnostic_relevance::context;
-    }
+        -> diagnostic_relevance;
 };
 
 struct id_selector
 {
     std::string id;
 
-    [[nodiscard]] auto matches(nlohmann::json const &snapshot) const -> bool
-    {
-        return snapshot.value("id", "") == id;
-    }
+    [[nodiscard]] auto matches(nlohmann::json const &snapshot) const -> bool;
 
-    [[nodiscard]] auto describe() const -> std::string
-    {
-        return std::format("id({})", id);
-    }
+    [[nodiscard]] auto describe() const -> std::string;
 
     [[nodiscard]] auto relevance(nlohmann::json const &snapshot) const
-        -> diagnostic_relevance
-    {
-        return has_diagnostic_summary(snapshot) ? diagnostic_relevance::context
-                                                : diagnostic_relevance::ignore;
-    }
+        -> diagnostic_relevance;
 };
 
 template <typename Selector>
@@ -99,23 +65,51 @@ concept strict_find_selector =
         { selector.relevance(snapshot) } -> std::same_as<diagnostic_relevance>;
     };
 
+}  // namespace detail
+
 namespace by {
 
-inline auto role(std::string_view role) -> role_selector
-{
-    return role_selector{std::string{role}};
-}
+//* =========================================================================
+/// \brief Selects nodes by accessibility role.
+///
+/// Role selectors are intended for broad queries, such as finding all buttons
+/// currently visible in a window.
+///
+/// \par Usage
+/// \code
+/// auto buttons = ui.query(hugin::by::role("button"));
+/// \endcode
+//* =========================================================================
+auto role(std::string_view role) -> detail::role_selector;
 
-inline auto role_name(std::string_view role, std::string_view name)
-    -> role_name_selector
-{
-    return role_name_selector{std::string{role}, std::string{name}};
-}
+//* =========================================================================
+/// \brief Selects one node by accessibility role and accessible name.
+///
+/// Role-and-name selectors are intended for strict lookup when the user-facing
+/// label identifies the node within its role.
+///
+/// \par Usage
+/// \code
+/// auto ok = ui.find(hugin::by::role_name("button", "OK"));
+/// ok.click();
+/// \endcode
+//* =========================================================================
+auto role_name(std::string_view role, std::string_view name)
+    -> detail::role_name_selector;
 
-inline auto id(std::string_view id) -> id_selector
-{
-    return id_selector{std::string{id}};
-}
+//* =========================================================================
+/// \brief Selects one node by automation identifier.
+///
+/// Automation identifiers are useful when visible text is not stable or is not
+/// sufficient to distinguish the target node.
+///
+/// \par Usage
+/// \code
+/// auto action = ui.find(hugin::by::id("primary_action"));
+/// action.click();
+/// \endcode
+//* =========================================================================
+auto id(std::string_view id) -> detail::id_selector;
 
 }  // namespace by
 

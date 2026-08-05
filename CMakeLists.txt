@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 option(HUGIN_COVERAGE "Build with code coverage options" False)
 option(HUGIN_WITH_TESTS "Build with tests" True)
+option(HUGIN_WITH_EXAMPLES "Build examples" False)
 option(HUGIN_DOC_ONLY "Build only documentation" False)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -51,8 +52,16 @@ if (NOT TARGET KazDragon::munin)
     find_package(munin 0.7.1 CONFIG REQUIRED)
 endif()
 
-if (HUGIN_WITH_TESTS)
+if (HUGIN_WITH_TESTS OR HUGIN_WITH_EXAMPLES)
     find_package(GTest CONFIG REQUIRED)
+endif()
+
+if (HUGIN_WITH_EXAMPLES)
+    find_package(Threads REQUIRED)
+
+    if (NOT TARGET KazDragon::consolepp)
+        find_package(consolepp 0.1.1 CONFIG REQUIRED)
+    endif()
 endif()
 
 if (HUGIN_COVERAGE)
@@ -73,13 +82,17 @@ target_include_directories(hugin
 
 target_sources(hugin
     PRIVATE
-        src/automation_session.cpp
-        src/munin_snapshot.cpp
-        src/snapshot_queries.cpp
+        src/diagnostics.cpp
+        src/selectors.cpp
+        src/session.cpp
 )
 
 target_link_libraries(hugin PUBLIC KazDragon::munin)
 
 if (HUGIN_WITH_TESTS)
     add_subdirectory(test)
+endif()
+
+if (HUGIN_WITH_EXAMPLES)
+    add_subdirectory(examples)
 endif()
