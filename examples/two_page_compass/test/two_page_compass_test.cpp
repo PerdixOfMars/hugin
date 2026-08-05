@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <hugin/session.hpp>
 #include <munin/window.hpp>
+#include <terminalpp/rectangle.hpp>
 #include <terminalpp/terminal.hpp>
 #include <two_page_compass/app.hpp>
 
@@ -66,6 +67,33 @@ TEST_F(two_page_compass_example, starts_on_page_one_with_a_next_button)
     EXPECT_EQ(
         "Page One", ui.find(hugin::by::role_name("image", "Page One")).name());
     EXPECT_EQ("Next", ui.find(hugin::by::role_name("button", "Next")).name());
+}
+
+TEST_F(
+    two_page_compass_example, page_one_places_title_north_and_next_south_east)
+{
+    auto ui = make_session();
+
+    EXPECT_EQ(
+        terminalpp::rectangle({0, 0}, {79, 1}),
+        ui.find(hugin::by::role_name("image", "Page One")).bounds());
+    EXPECT_EQ(
+        terminalpp::rectangle({71, 20}, {8, 3}),
+        ui.find(hugin::by::role_name("button", "Next")).bounds());
+}
+
+TEST_F(
+    two_page_compass_example, page_two_places_title_north_and_back_south_west)
+{
+    auto ui = make_session();
+    ui.find(hugin::by::role_name("button", "Next")).click();
+
+    EXPECT_EQ(
+        terminalpp::rectangle({0, 0}, {79, 1}),
+        ui.find(hugin::by::role_name("image", "Page Two")).bounds());
+    EXPECT_EQ(
+        terminalpp::rectangle({0, 20}, {8, 3}),
+        ui.find(hugin::by::role_name("button", "Back")).bounds());
 }
 
 TEST_F(two_page_compass_example, next_button_transitions_to_page_two)
