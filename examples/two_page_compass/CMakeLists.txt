@@ -22,6 +22,27 @@ target_link_libraries(two_page_compass_app
         KazDragon::munin
 )
 
+add_executable(two_page_compass)
+
+target_sources(two_page_compass PRIVATE
+    src/main.cpp
+)
+
+target_compile_features(two_page_compass PRIVATE cxx_std_20)
+
+target_compile_options(two_page_compass
+    PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:/WX>
+        $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-Wall -Wextra -Wshadow -Wpedantic -Werror -Wno-unused-parameter>
+)
+
+target_link_libraries(two_page_compass
+    PRIVATE
+        two_page_compass_app
+        KazDragon::consolepp
+        Threads::Threads
+)
+
 add_executable(two_page_compass_test)
 
 target_sources(two_page_compass_test PRIVATE

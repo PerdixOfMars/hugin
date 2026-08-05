@@ -52,8 +52,16 @@ if (NOT TARGET KazDragon::munin)
     find_package(munin 0.7.1 CONFIG REQUIRED)
 endif()
 
-if (HUGIN_WITH_TESTS)
+if (HUGIN_WITH_TESTS OR HUGIN_WITH_EXAMPLES)
     find_package(GTest CONFIG REQUIRED)
+endif()
+
+if (HUGIN_WITH_EXAMPLES)
+    find_package(Threads REQUIRED)
+
+    if (NOT TARGET KazDragon::consolepp)
+        find_package(consolepp 0.1.1 CONFIG REQUIRED)
+    endif()
 endif()
 
 if (HUGIN_COVERAGE)
