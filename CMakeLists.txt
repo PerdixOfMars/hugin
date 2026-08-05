@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 option(HUGIN_COVERAGE "Build with code coverage options" False)
 option(HUGIN_WITH_TESTS "Build with tests" True)
+option(HUGIN_WITH_EXAMPLES "Build examples" False)
 option(HUGIN_DOC_ONLY "Build only documentation" False)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -82,4 +83,8 @@ target_link_libraries(hugin PUBLIC KazDragon::munin)
 
 if (HUGIN_WITH_TESTS)
     add_subdirectory(test)
+endif()
+
+if (HUGIN_WITH_EXAMPLES)
+    add_subdirectory(examples)
 endif()

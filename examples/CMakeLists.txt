@@ -1,0 +1,1 @@
+add_subdirectory(two_page_compass)
