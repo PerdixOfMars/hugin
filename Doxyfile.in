@@ -1,0 +1,30 @@
+DOXYFILE_ENCODING      = UTF-8
+PROJECT_NAME           = "Hugin"
+PROJECT_NUMBER         = @HUGIN_VERSION@
+PROJECT_BRIEF          = "A C++ testing DSL for automating Munin terminal UIs"
+OUTPUT_DIRECTORY       =
+OUTPUT_LANGUAGE        = English
+FULL_PATH_NAMES        = YES
+STRIP_FROM_PATH        = @CMAKE_CURRENT_SOURCE_DIR@
+TAB_SIZE               = 4
+OPTIMIZE_OUTPUT_FOR_C  = NO
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+CASE_SENSE_NAMES       = YES
+HIDE_SCOPE_NAMES       = NO
+SORT_MEMBER_DOCS       = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = NO
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/include \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src \
+                         @CMAKE_CURRENT_SOURCE_DIR@/README.md
+RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */test/*
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+HAVE_DOT               = NO
