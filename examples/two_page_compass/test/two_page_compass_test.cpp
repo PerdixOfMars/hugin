@@ -67,3 +67,28 @@ TEST_F(two_page_compass_example, starts_on_page_one_with_a_next_button)
         "Page One", ui.find(hugin::by::role_name("image", "Page One")).name());
     EXPECT_EQ("Next", ui.find(hugin::by::role_name("button", "Next")).name());
 }
+
+TEST_F(two_page_compass_example, next_button_transitions_to_page_two)
+{
+    auto ui = make_session();
+
+    ui.find(hugin::by::role_name("button", "Next")).click();
+
+    EXPECT_EQ(
+        "Page Two", ui.find(hugin::by::role_name("image", "Page Two")).name());
+    EXPECT_EQ("Back", ui.find(hugin::by::role_name("button", "Back")).name());
+    EXPECT_TRUE(ui.query(hugin::by::role_name("button", "Next")).empty());
+}
+
+TEST_F(two_page_compass_example, back_button_transitions_to_page_one)
+{
+    auto ui = make_session();
+    ui.find(hugin::by::role_name("button", "Next")).click();
+
+    ui.find(hugin::by::role_name("button", "Back")).click();
+
+    EXPECT_EQ(
+        "Page One", ui.find(hugin::by::role_name("image", "Page One")).name());
+    EXPECT_EQ("Next", ui.find(hugin::by::role_name("button", "Next")).name());
+    EXPECT_TRUE(ui.query(hugin::by::role_name("button", "Back")).empty());
+}
