@@ -4,6 +4,7 @@
 #include <hugin/selectors.hpp>
 #include <nlohmann/json.hpp>
 #include <terminalpp/point.hpp>
+#include <terminalpp/rectangle.hpp>
 
 #include <functional>
 #include <initializer_list>
@@ -67,6 +68,11 @@ public:
     /// \brief Returns this node's raw Introspection JSON snapshot.
     //* =====================================================================
     [[nodiscard]] auto raw_json() const -> nlohmann::json const &;
+
+    //* =====================================================================
+    /// \brief Returns this node's absolute bounds in window coordinates.
+    //* =====================================================================
+    [[nodiscard]] auto bounds() const -> terminalpp::rectangle;
 
     //* =====================================================================
     /// \brief Clicks this node if it has a click action.

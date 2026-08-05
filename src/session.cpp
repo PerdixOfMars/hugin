@@ -32,6 +32,15 @@ auto node::raw_json() const -> nlohmann::json const &
     return snapshot_;
 }
 
+auto node::bounds() const -> terminalpp::rectangle
+{
+    return {
+        click_position(),
+        {snapshot_.at("size").at("width").get<terminalpp::coordinate_type>(),
+            snapshot_.at("size").at("height").get<terminalpp::coordinate_type>()}
+    };
+}
+
 void node::click() const
 {
     if (click_)

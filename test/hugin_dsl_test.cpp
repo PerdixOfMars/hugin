@@ -7,6 +7,7 @@
 #include <munin/vertical_strip_layout.hpp>
 #include <munin/window.hpp>
 #include <terminalpp/core.hpp>
+#include <terminalpp/rectangle.hpp>
 #include <terminalpp/terminal.hpp>
 #include <terminalpp/virtual_key.hpp>
 
@@ -530,6 +531,23 @@ TEST_F(
 
     auto const image = screen.ui.find(hugin::by::role_name("image", "After"));
     EXPECT_EQ("After", image.name());
+}
+
+TEST_F(hugin_dsl_session, found_node_exposes_absolute_bounds)
+{
+    auto content = std::make_shared<munin::container>();
+    auto offset_container = std::make_shared<munin::container>();
+    offset_container->set_layout(munin::make_vertical_strip_layout());
+    offset_container->set_position({10, 4});
+    offset_container->set_size({10, 3});
+    offset_container->add_component(munin::make_button(" OK "));
+    content->add_component(offset_container);
+    content->set_size({30, 10});
+    auto screen = screen_with(content);
+
+    auto const button = screen.ui.find(hugin::by::role_name("button", "OK"));
+
+    EXPECT_EQ(terminalpp::rectangle({10, 4}, {6, 3}), button.bounds());
 }
 
 TEST_F(
