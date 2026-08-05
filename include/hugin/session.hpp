@@ -4,14 +4,21 @@
 #include <hugin/selectors.hpp>
 #include <nlohmann/json.hpp>
 #include <terminalpp/point.hpp>
+#include <terminalpp/rectangle.hpp>
 
 #include <functional>
+#include <initializer_list>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 namespace munin {
 class window;
+}
+
+namespace terminalpp {
+struct virtual_key;
 }
 
 namespace hugin {
@@ -58,6 +65,16 @@ public:
     [[nodiscard]] auto name() const -> std::string;
 
     //* =====================================================================
+    /// \brief Returns this node's raw Introspection JSON snapshot.
+    //* =====================================================================
+    [[nodiscard]] auto raw_json() const -> nlohmann::json const &;
+
+    //* =====================================================================
+    /// \brief Returns this node's absolute bounds in window coordinates.
+    //* =====================================================================
+    [[nodiscard]] auto bounds() const -> terminalpp::rectangle;
+
+    //* =====================================================================
     /// \brief Clicks this node if it has a click action.
     //* =====================================================================
     void click() const;
@@ -100,6 +117,21 @@ public:
     explicit session(munin::window &window);
 
     //* =====================================================================
+    /// \brief Sends one keypress through the native Munin event path.
+    //* =====================================================================
+    void send_key(terminalpp::virtual_key const &key) const;
+
+    //* =====================================================================
+    /// \brief Sends keypresses through the native Munin event path.
+    //* =====================================================================
+    void send_keys(std::initializer_list<terminalpp::virtual_key> keys) const;
+
+    //* =====================================================================
+    /// \brief Sends text as keypresses through the native Munin event path.
+    //* =====================================================================
+    void send_text(std::string_view text) const;
+
+    //* =====================================================================
     /// \brief Returns all nodes matching the selector.
     //* =====================================================================
     template <detail::snapshot_selector Selector>
@@ -133,10 +165,57 @@ public:
             })};
     }
 
+    //* =====================================================================
+    /// \brief Asserts that the selected node is the focused leaf component.
+    //* =====================================================================
+    template <detail::strict_find_selector Selector>
+    void assert_focused(Selector const &selector) const
+    {
+        auto const selected = find(selector);
+        auto const &snapshot = selected.raw_json();
+
+        if (!is_focused_leaf(snapshot))
+        {
+            throw diagnostic_error{
+                selector.describe() + " is not focused leaf"};
+        }
+    }
+
+    //* =====================================================================
+    /// \brief Returns the currently focused component path.
+    //* =====================================================================
+    [[nodiscard]] auto focus_path() const -> std::vector<node>
+    {
+        auto path = std::vector<node>{};
+        append_focused_path(path, content_snapshot());
+        return path;
+    }
+
 private:
     [[nodiscard]] auto content_snapshot() const -> nlohmann::json;
     [[nodiscard]] static auto snapshot_position(nlohmann::json const &snapshot)
         -> terminalpp::point;
+    [[nodiscard]] static auto is_focused_leaf(nlohmann::json const &snapshot)
+        -> bool
+    {
+        return snapshot.value("has_focus", false)
+            && snapshot.value("subcomponents", nlohmann::json::array()).empty();
+    }
+
+    void append_focused_path(
+        std::vector<node> &path, nlohmann::json const &snapshot) const
+    {
+        if (snapshot.value("has_focus", false))
+        {
+            path.push_back(make_node(snapshot));
+        }
+
+        for (auto const &child :
+             snapshot.value("subcomponents", nlohmann::json::array()))
+        {
+            append_focused_path(path, child);
+        }
+    }
 
     template <typename Predicate>
     void append_matching_descendants(

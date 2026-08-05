@@ -14,32 +14,32 @@ Under the DSL, Hugin will consume Munin's existing `to_json()`-based introspecti
 
 ## User Stories
 
-1. As a UI test author, I want to fetch a point-in-time automation snapshot of a Munin UI, so that I can inspect the current component tree without scraping terminal text.
-2. As a UI test author, I want to locate a component by stable Automation ID, so that tests survive label and layout changes.
-3. As a UI test author, I want to ask whether a screen contains a certain number of components of a given type, so that I can assert structural expectations about the UI.
-4. As a UI test author, I want to assert that a specific component exists, so that I can verify screen composition directly.
-5. As a UI test author, I want to assert that a component's current type matches the expected semantic role, so that I can verify user-facing meaning rather than raw terminal output.
-6. As a UI test author, I want to locate a control by semantic role plus accessible name, so that tests can target user-visible controls without scraping terminal rendering.
-7. As a UI test author, I want to inspect the raw introspection JSON when helpers are insufficient, so that I can debug failing tests without waiting for new helper APIs.
-8. As a UI test author, I want to send keyboard input through the native Munin event path, so that tests exercise the same behavior as real users.
-9. As a UI test author, I want to send mouse input through the native Munin event path, so that pointer interactions are tested honestly.
-10. As a UI test author, I want to move focus through normal keyboard navigation, so that I can verify focus behavior and input routing.
-11. As a UI test author, I want to assert the currently focused leaf component, so that I can verify navigational behavior precisely.
-12. As a UI test author, I want access to the broader focus path when needed, so that container-owned focus behavior remains visible in diagnostics.
-13. As a UI test author, I want to wait for a condition by polling fresh snapshots until timeout, so that asynchronous or multi-step UI changes can be tested deterministically.
-14. As a UI test author, I want a small explicit C++ DSL of sessions, selectors, nodes, actions, assertions, and waits, so that tests express user-visible UI contracts clearly.
-15. As a UI test author, I want DSL failures to explain the selector, matched or missing nodes, current focus, and recent actions, so that broken UI contracts are quick to diagnose.
-16. As a UI test author, I want convenience helpers such as target resolution plus click-like behavior built on primitives, so that common tests stay readable without weakening the core contract.
-17. As a framework developer, I want Hugin's public C++ DSL separated from its underlying engine, so that readable test vocabulary does not collapse into Munin wrapper mechanics.
-18. As a framework developer, I want Hugin's selector and assertion logic separated from Munin wiring, so that the core can be tested in isolation.
-19. As a framework developer, I want the Munin automation adapter to be thin, so that later transports such as a telnet side-channel can be added without rewriting the Hugin core.
-20. As a framework developer, I want Munin to own automation facts and Hugin to own automation behavior, so that each library evolves at the right abstraction level.
-21. As a Munin UI author, I want to assign Automation IDs without changing every constructor signature, so that automation support can be adopted incrementally across components.
-22. As a Munin UI author, I want Automation IDs to be unique only within one component tree, so that multiple similar client UIs can coexist in the same process.
-23. As a Munin UI author, I want components with visible identifying text to expose an accessible name, so that Hugin can resolve user-facing selectors without terminal scraping.
-24. As a debugger, I want introspection JSON to remain useful outside formal tests, so that the same surface helps with both automation and troubleshooting.
-25. As a product team, I want a small proving scenario with a form, focus movement, text entry, button activation, and diagnostic assertion failure, so that the MVP proves the full vertical slice before wider rollout.
-26. As a future Hugin maintainer, I want tests to drive development of the core modules, so that the framework grows from verified behavior instead of ad hoc helpers.
+1. [x] As a UI test author, I want to fetch a point-in-time automation snapshot of a Munin UI, so that I can inspect the current component tree without scraping terminal text.
+2. [x] As a UI test author, I want to locate a component by stable Automation ID, so that tests survive label and layout changes.
+3. [x] As a UI test author, I want to ask whether a screen contains a certain number of components of a given type, so that I can assert structural expectations about the UI.
+4. [x] As a UI test author, I want to assert that a specific component exists, so that I can verify screen composition directly.
+5. [x] As a UI test author, I want to assert that a component's current type matches the expected semantic role, so that I can verify user-facing meaning rather than raw terminal output.
+6. [x] As a UI test author, I want to locate a control by semantic role plus accessible name, so that tests can target user-visible controls without scraping terminal rendering.
+7. [ ] As a UI test author, I want to inspect the raw introspection JSON when helpers are insufficient, so that I can debug failing tests without waiting for new helper APIs.
+8. [x] As a UI test author, I want to send keyboard input through the native Munin event path, so that tests exercise the same behavior as real users.
+9. [x] As a UI test author, I want to send mouse input through the native Munin event path, so that pointer interactions are tested honestly.
+10. [x] As a UI test author, I want to move focus through normal keyboard navigation, so that I can verify focus behavior and input routing.
+11. [x] As a UI test author, I want to assert the currently focused leaf component, so that I can verify navigational behavior precisely.
+12. [x] As a UI test author, I want access to the broader focus path when needed, so that container-owned focus behavior remains visible in diagnostics.
+13. [ ] As a UI test author, I want to wait for a condition by polling fresh snapshots until timeout, so that asynchronous or multi-step UI changes can be tested deterministically.
+14. [ ] As a UI test author, I want a small explicit C++ DSL of sessions, selectors, nodes, actions, assertions, and waits, so that tests express user-visible UI contracts clearly.
+15. [ ] As a UI test author, I want DSL failures to explain the selector, matched or missing nodes, current focus, and recent actions, so that broken UI contracts are quick to diagnose.
+16. [x] As a UI test author, I want convenience helpers such as target resolution plus click-like behavior built on primitives, so that common tests stay readable without weakening the core contract.
+17. [ ] As a framework developer, I want Hugin's public C++ DSL separated from its underlying engine, so that readable test vocabulary does not collapse into Munin wrapper mechanics.
+18. [ ] As a framework developer, I want Hugin's selector and assertion logic separated from Munin wiring, so that the core can be tested in isolation.
+19. [x] As a framework developer, I want the Munin automation adapter to be thin, so that later transports such as a telnet side-channel can be added without rewriting the Hugin core.
+20. [x] As a framework developer, I want Munin to own automation facts and Hugin to own automation behavior, so that each library evolves at the right abstraction level.
+21. [x] As a Munin UI author, I want to assign Automation IDs without changing every constructor signature, so that automation support can be adopted incrementally across components.
+22. [x] As a Munin UI author, I want Automation IDs to be unique only within one component tree, so that multiple similar client UIs can coexist in the same process.
+23. [x] As a Munin UI author, I want components with visible identifying text to expose an accessible name, so that Hugin can resolve user-facing selectors without terminal scraping.
+24. [x] As a debugger, I want introspection JSON to remain useful outside formal tests, so that the same surface helps with both automation and troubleshooting.
+25. [ ] As a product team, I want a small proving scenario with a form, focus movement, text entry, button activation, and diagnostic assertion failure, so that the MVP proves the full vertical slice before wider rollout.
+26. [x] As a future Hugin maintainer, I want tests to drive development of the core modules, so that the framework grows from verified behavior instead of ad hoc helpers.
 
 ## Implementation Decisions
 

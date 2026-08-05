@@ -2,11 +2,14 @@
 #include <hugin/session.hpp>
 #include <munin/button.hpp>
 #include <munin/container.hpp>
+#include <munin/edit.hpp>
 #include <munin/image.hpp>
 #include <munin/vertical_strip_layout.hpp>
 #include <munin/window.hpp>
 #include <terminalpp/core.hpp>
+#include <terminalpp/rectangle.hpp>
 #include <terminalpp/terminal.hpp>
+#include <terminalpp/virtual_key.hpp>
 
 #include <functional>
 #include <initializer_list>
@@ -76,6 +79,60 @@ protected:
         -> dsl_screen
     {
         return dsl_screen{terminal, content};
+    }
+
+    [[nodiscard]] auto screen_with_focused_edit() -> dsl_screen
+    {
+        auto edit = munin::make_edit() | munin::with_id("name");
+        edit->set_focus();
+        return screen_with(edit);
+    }
+
+    [[nodiscard]] auto screen_with_focused_edit_and_button() -> dsl_screen
+    {
+        auto content = std::make_shared<munin::container>();
+        auto edit = munin::make_edit() | munin::with_id("name");
+        auto button = munin::make_button(" Save ") | munin::with_id("save");
+        content->add_component(edit);
+        content->add_component(button);
+        edit->set_focus();
+        return screen_with(content);
+    }
+
+    [[nodiscard]] auto screen_with_focused_edit_inside_panel() -> dsl_screen
+    {
+        auto content = std::make_shared<munin::container>();
+        auto panel =
+            std::make_shared<munin::container>() | munin::with_id("panel");
+        auto edit = munin::make_edit() | munin::with_id("name");
+        panel->add_component(edit);
+        content->add_component(panel);
+        edit->set_focus();
+        return screen_with(content);
+    }
+
+    static auto edit_text(hugin::session &ui) -> std::string
+    {
+        return ui.find(hugin::by::id("name"))
+            .raw_json()
+            .at("text")
+            .get<std::string>();
+    }
+
+    static auto keypress(terminalpp::vk key) -> terminalpp::virtual_key
+    {
+        return terminalpp::virtual_key{
+            key, terminalpp::vk_modifier::none, 1, terminalpp::byte{'\t'}};
+    }
+
+    static auto tab_key() -> terminalpp::virtual_key
+    {
+        return keypress(terminalpp::vk::ht);
+    }
+
+    static auto back_tab_key() -> terminalpp::virtual_key
+    {
+        return keypress(terminalpp::vk::bt);
     }
 
     static void add_button_under_intermediate_containers(
@@ -201,6 +258,15 @@ TEST_F(hugin_dsl_session, strict_find_returns_a_button_matching_role_and_name)
 
     EXPECT_EQ("button", button.role());
     EXPECT_EQ("OK", button.name());
+}
+
+TEST_F(hugin_dsl_session, found_node_exposes_its_raw_json_snapshot)
+{
+    auto screen = screen_with_single_button();
+
+    auto const button = screen.ui.find(hugin::by::role_name("button", "OK"));
+
+    EXPECT_EQ("button", button.raw_json().at("type"));
 }
 
 TEST_F(hugin_dsl_session, strict_find_returns_a_button_matching_automation_id)
@@ -340,6 +406,109 @@ TEST_F(hugin_dsl_session, clicking_button_changes_sibling_image_name)
     EXPECT_EQ("After", image.name());
 }
 
+TEST_F(hugin_dsl_session, sends_a_virtual_key_to_the_focused_edit)
+{
+    auto screen = screen_with_focused_edit();
+
+    screen.ui.send_key(terminalpp::virtual_key{
+        terminalpp::vk::lowercase_a,
+        terminalpp::vk_modifier::none,
+        1,
+        terminalpp::byte{'a'}});
+
+    EXPECT_EQ("a", edit_text(screen.ui));
+}
+
+TEST_F(hugin_dsl_session, sends_multiple_virtual_keys_to_the_focused_edit)
+{
+    auto screen = screen_with_focused_edit();
+
+    screen.ui.send_keys({
+        terminalpp::virtual_key{
+                                terminalpp::vk::lowercase_a,
+                                terminalpp::vk_modifier::none,
+                                1, terminalpp::byte{'a'}},
+        terminalpp::virtual_key{
+                                terminalpp::vk::lowercase_b,
+                                terminalpp::vk_modifier::none,
+                                1, terminalpp::byte{'b'}},
+    });
+
+    EXPECT_EQ("ab", edit_text(screen.ui));
+}
+
+TEST_F(hugin_dsl_session, sends_text_to_the_focused_edit_as_keypresses)
+{
+    auto screen = screen_with_focused_edit();
+
+    screen.ui.send_text("ab");
+
+    EXPECT_EQ("ab", edit_text(screen.ui));
+}
+
+TEST_F(hugin_dsl_session, asserts_a_focused_leaf_by_automation_id)
+{
+    auto screen = screen_with_focused_edit();
+
+    screen.ui.assert_focused(hugin::by::id("name"));
+}
+
+TEST_F(hugin_dsl_session, focused_assertion_fails_for_an_unfocused_leaf)
+{
+    auto screen = screen_with_focused_edit_and_button();
+
+    EXPECT_THROW(
+        screen.ui.assert_focused(hugin::by::id("save")),
+        hugin::diagnostic_error);
+}
+
+TEST_F(hugin_dsl_session, focused_assertion_fails_for_a_focused_container)
+{
+    auto screen = screen_with_focused_edit_inside_panel();
+
+    EXPECT_THROW(
+        screen.ui.assert_focused(hugin::by::id("panel")),
+        hugin::diagnostic_error);
+}
+
+TEST_F(hugin_dsl_session, tab_moves_focus_to_the_next_leaf)
+{
+    auto screen = screen_with_focused_edit_and_button();
+
+    screen.ui.send_key(tab_key());
+
+    screen.ui.assert_focused(hugin::by::id("save"));
+}
+
+TEST_F(hugin_dsl_session, back_tab_moves_focus_to_the_previous_leaf)
+{
+    auto screen = screen_with_focused_edit_and_button();
+    screen.ui.send_key(tab_key());
+
+    screen.ui.send_key(back_tab_key());
+
+    screen.ui.assert_focused(hugin::by::id("name"));
+}
+
+TEST_F(hugin_dsl_session, exposes_the_current_focus_path)
+{
+    auto screen = screen_with_focused_edit();
+
+    (void)screen.ui.focus_path();
+}
+
+TEST_F(hugin_dsl_session, focus_path_contains_focused_ancestors_and_leaf)
+{
+    auto screen = screen_with_focused_edit_inside_panel();
+
+    auto const path = screen.ui.focus_path();
+
+    ASSERT_EQ(3U, path.size());
+    EXPECT_EQ("container", path[0].role());
+    EXPECT_EQ("panel", path[1].raw_json().at("id"));
+    EXPECT_EQ("name", path[2].raw_json().at("id"));
+}
+
 TEST_F(
     hugin_dsl_session,
     clicking_button_inside_offset_container_activates_the_button)
@@ -362,6 +531,23 @@ TEST_F(
 
     auto const image = screen.ui.find(hugin::by::role_name("image", "After"));
     EXPECT_EQ("After", image.name());
+}
+
+TEST_F(hugin_dsl_session, found_node_exposes_absolute_bounds)
+{
+    auto content = std::make_shared<munin::container>();
+    auto offset_container = std::make_shared<munin::container>();
+    offset_container->set_layout(munin::make_vertical_strip_layout());
+    offset_container->set_position({10, 4});
+    offset_container->set_size({10, 3});
+    offset_container->add_component(munin::make_button(" OK "));
+    content->add_component(offset_container);
+    content->set_size({30, 10});
+    auto screen = screen_with(content);
+
+    auto const button = screen.ui.find(hugin::by::role_name("button", "OK"));
+
+    EXPECT_EQ(terminalpp::rectangle({10, 4}, {6, 3}), button.bounds());
 }
 
 TEST_F(
